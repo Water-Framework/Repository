@@ -29,13 +29,13 @@ import it.water.core.api.repository.query.QueryOrder;
 import it.water.core.api.service.BaseEntityApi;
 import it.water.core.api.service.BaseEntitySystemApi;
 import it.water.core.api.service.OwnershipResourceService;
-import it.water.repository.entity.model.exceptions.EntityNotFound;
 import it.water.core.permission.action.CrudAction;
 import it.water.core.permission.annotations.AllowGenericPermissions;
 import it.water.core.permission.annotations.AllowPermissions;
 import it.water.core.permission.annotations.AllowPermissionsOnReturn;
 import it.water.core.permission.exceptions.UnauthorizedException;
 import it.water.core.service.BaseAbstractService;
+import it.water.repository.entity.model.exceptions.EntityNotFound;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,7 +131,7 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
     public T find(Query filter) {
         this.log.debug("Service Find entity {} with id {}", this.type.getSimpleName(), filter);
         SecurityContext securityContext = getSecurityContext();
-        filter = this.createConditionForOwnedOrSharedResource(filter, securityContext.isAdmin(), securityContext.getLoggedEntityId());
+        filter = this.createConditionForOwnedOrSharedResource(filter, securityContext);
         return this.getSystemService().find(filter);
     }
 
@@ -147,7 +147,7 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
     public PaginableResult<T> findAll(Query filter, int delta, int page, QueryOrder queryOrder) {
         this.log.debug("Service Find all entities {} ", this.type.getSimpleName());
         SecurityContext securityContext = getSecurityContext();
-        filter = this.createConditionForOwnedOrSharedResource(filter, securityContext.isAdmin(), securityContext.getLoggedEntityId());
+        filter = this.createConditionForOwnedOrSharedResource(filter, securityContext);
         return this.getSystemService().findAll(filter, delta, page, queryOrder);
     }
 
@@ -155,25 +155,28 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
      * @param initialFilter
      * @return
      */
-    private Query createConditionForOwnedOrSharedResource(Query initialFilter, boolean isAdmin, long loggedUserId) {
-
-        //admins can see everything
-        if (!isAdmin && OwnershipResourceService.class.isAssignableFrom(this.getClass())) {
-            OwnershipResourceService ownedRes = (OwnershipResourceService) this;
-            Query ownedResourceFilter = null;
-
-            if (loggedUserId != 0) {
-                String exp = ownedRes.getOwnerFieldPath() + " = " + loggedUserId;
-                ownedResourceFilter = getSystemService().getQueryBuilderInstance().createQueryFilter(exp);
-            } else {
+    private Query createConditionForOwnedOrSharedResource(Query initialFilter, SecurityContext securityContext) {
+        if (OwnershipResourceService.class.isAssignableFrom(this.getClass())) {
+            if (securityContext == null)
                 throw new UnauthorizedException();
-            }
+            //admins can see everything
+            if (!securityContext.isAdmin()) {
+                OwnershipResourceService ownedRes = (OwnershipResourceService) this;
+                Query ownedResourceFilter = null;
 
-            ownedResourceFilter = this.createFilterForOwnedOrSharedResource(ownedResourceFilter, loggedUserId);
+                if (securityContext.getLoggedEntityId() != 0) {
+                    String exp = ownedRes.getOwnerFieldPath() + " = " + securityContext.getLoggedEntityId();
+                    ownedResourceFilter = getSystemService().getQueryBuilderInstance().createQueryFilter(exp);
+                } else {
+                    throw new UnauthorizedException();
+                }
 
-            if (initialFilter == null) initialFilter = ownedResourceFilter;
-            else if (ownedResourceFilter != null) {
-                initialFilter = initialFilter.and(ownedResourceFilter);
+                ownedResourceFilter = this.createFilterForOwnedOrSharedResource(ownedResourceFilter, securityContext.getLoggedEntityId());
+
+                if (initialFilter == null) initialFilter = ownedResourceFilter;
+                else if (ownedResourceFilter != null) {
+                    initialFilter = initialFilter.and(ownedResourceFilter);
+                }
             }
         }
         return initialFilter;
@@ -203,7 +206,7 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
     public long countAll(Query filter) {
         this.log.debug("Service countAll entities {}", this.type.getSimpleName());
         SecurityContext securityContext = getSecurityContext();
-        filter = this.createConditionForOwnedOrSharedResource(filter, securityContext.isAdmin(), securityContext.getLoggedEntityId());
+        filter = this.createConditionForOwnedOrSharedResource(filter, securityContext);
         return this.getSystemService().countAll(filter);
     }
 
@@ -229,5 +232,4 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
         }
         return ownedResourceFilter;
     }
-
 }

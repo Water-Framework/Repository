@@ -11,7 +11,6 @@ dependencies {
 	implementation group:'it.water.core',name:'Core-registry',version:project.waterVersion
 	implementation group:'it.water.core',name:'Core-service',version:project.waterVersion
 	implementation group:'it.water.core',name:'Core-validation',version:project.waterVersion
-	implementation group:'it.water.core',name:'Core-validation-javax',version:project.waterVersion
 	implementation group:'it.water.core',name:'Core-security',version:project.waterVersion
 	implementation group:'it.water.core',name:'Core-permission',version:project.waterVersion
 	implementation group:'it.water.core',name:'Core-interceptors',version:project.waterVersion
