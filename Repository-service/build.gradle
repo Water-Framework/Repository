@@ -29,7 +29,9 @@ dependencies {
 	testImplementation 'org.atteo.classindex:classindex:' + project.atteoClassIndexVersion
 	testImplementation 'javax.persistence:javax.persistence-api:'+project.javaxPersistenceVersion
 	testImplementation 'org.hsqldb:hsqldb:2.4.1'
-	testImplementation 'javax.validation:validation-api:2.0.1.Final'
+	//using jakarta validation for test purpose
+	testImplementation group: 'jakarta.validation', name: 'jakarta.validation-api', version:project.jakartaValidationVersion
+	testImplementation group:'it.water.core',name:'Core-validation',version:project.waterVersion
 }
 
 test {

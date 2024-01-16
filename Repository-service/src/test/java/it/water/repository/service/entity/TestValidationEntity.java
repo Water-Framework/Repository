@@ -13,24 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.water.repository.service.javax;
 
+package it.water.repository.service.entity;
+
+import it.water.core.api.model.BaseEntity;
+import it.water.core.api.model.Resource;
+import it.water.core.validation.annotations.NotNullOnPersist;
 import it.water.repository.entity.model.AbstractEntity;
-import it.water.core.validation.javax.annotations.NotNullOnPersist;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+@Access(AccessType.FIELD)
 @Entity
-public class TestEntity extends AbstractEntity {
+public class TestValidationEntity extends AbstractEntity implements BaseEntity {
+
     @Id
-    @Setter
-    @Getter
     private long id;
-    @NotNullOnPersist
-    @Setter
+
     @Getter
+    @Setter
+    @NotNullOnPersist
     private String entityField;
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+
 }

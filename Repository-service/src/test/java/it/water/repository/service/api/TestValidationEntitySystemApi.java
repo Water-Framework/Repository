@@ -13,17 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.water.repository.service.javax;
+package it.water.repository.service.api;
 
-import it.water.core.api.repository.BaseRepository;
+import it.water.core.api.model.Resource;
+import it.water.core.api.service.BaseEntitySystemApi;
+import it.water.repository.service.entity.TestEntity;
+import it.water.repository.service.entity.TestValidationEntity;
 
-public class TestEntitySystemServiceImpl extends EntitySystemServiceImpl<TestEntity> implements TestEntitySystemApi {
-    protected TestEntitySystemServiceImpl() {
-        super(TestEntity.class);
-    }
-
-    @Override
-    protected BaseRepository<TestEntity> getRepository() {
-        return null;
-    }
+public interface TestValidationEntitySystemApi extends BaseEntitySystemApi<TestValidationEntity> {
+    void validate(Resource r);
 }

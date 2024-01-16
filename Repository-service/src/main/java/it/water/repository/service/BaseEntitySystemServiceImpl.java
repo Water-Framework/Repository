@@ -20,6 +20,7 @@ package it.water.repository.service;
 import it.water.core.api.entity.events.*;
 import it.water.core.api.model.BaseEntity;
 import it.water.core.api.model.PaginableResult;
+import it.water.core.api.model.Resource;
 import it.water.core.api.model.events.ApplicationEventProducer;
 import it.water.core.api.model.events.Event;
 import it.water.core.api.registry.ComponentRegistry;
@@ -28,12 +29,13 @@ import it.water.core.api.repository.query.Query;
 import it.water.core.api.repository.query.QueryBuilder;
 import it.water.core.api.repository.query.QueryOrder;
 import it.water.core.api.service.BaseEntitySystemApi;
-import it.water.repository.entity.model.exceptions.DuplicateEntityException;
-import it.water.repository.entity.model.exceptions.EntityNotFound;
+import it.water.core.api.validation.WaterValidator;
 import it.water.core.interceptors.annotations.Inject;
 import it.water.core.model.exceptions.WaterRuntimeException;
 import it.water.core.registry.model.exception.NoComponentRegistryFoundException;
 import it.water.core.service.BaseAbstractSystemService;
+import it.water.repository.entity.model.exceptions.DuplicateEntityException;
+import it.water.repository.entity.model.exceptions.EntityNotFound;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +61,10 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
     @Inject
     @Setter
     protected ComponentRegistry componentRegistry;
+
+    @Inject
+    @Setter
+    protected WaterValidator waterValidator;
 
     /**
      * Constructor for WaterBaseEntitySystemServiceImpl
@@ -223,12 +229,23 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
     }
 
     /**
-     *
      * @return query builder instance
      */
     @Override
     public QueryBuilder getQueryBuilderInstance() {
         return getRepository().getQueryBuilderInstance();
+    }
+
+    /**
+     * Validation managed by registered WaterValidator Bean
+     *
+     * @param resource
+     */
+    @Override
+    protected void validate(Resource resource) {
+        if(this.waterValidator != null){
+            this.waterValidator.validate(resource);
+        }
     }
 
     /**
