@@ -115,7 +115,7 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
             T entityBeforeUpdate = find(entity.getId());
             produceEvent(entity, PreUpdateEvent.class);
             produceDetailedEvent(entityBeforeUpdate, entity, PreUpdateDetailedEvent.class);
-            this.getRepository().update(entity);
+            entity = this.getRepository().update(entity);
             produceDetailedEvent(entityBeforeUpdate, entity, PostUpdateDetailedEvent.class);
             return entity;
         } catch (DuplicateEntityException e) {

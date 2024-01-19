@@ -43,8 +43,8 @@ public abstract class AbstractEntity extends AbstractResource implements BaseEnt
      * Version identifier for optimistic locking
      */
     @Getter
-    @Setter(AccessLevel.PROTECTED)
-    protected int entityVersion = 1;
+    @Setter
+    protected Integer entityVersion;
 
     /**
      * Auto filled: create date
