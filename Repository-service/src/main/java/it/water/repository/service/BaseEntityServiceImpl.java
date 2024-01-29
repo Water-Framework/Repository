@@ -29,7 +29,7 @@ import it.water.core.api.repository.query.QueryOrder;
 import it.water.core.api.service.BaseEntityApi;
 import it.water.core.api.service.BaseEntitySystemApi;
 import it.water.core.api.service.OwnershipResourceService;
-import it.water.core.permission.action.CrudAction;
+import it.water.core.permission.action.CrudActions;
 import it.water.core.permission.annotations.AllowGenericPermissions;
 import it.water.core.permission.annotations.AllowPermissions;
 import it.water.core.permission.annotations.AllowPermissionsOnReturn;
@@ -72,7 +72,7 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
      * @param entity parameter that indicates a generic entity
      * @return entity saved
      */
-    @AllowPermissions(actions = {CrudAction.ActionNames.SAVE})
+    @AllowPermissions(actions = {CrudActions.SAVE})
     public T save(T entity) {
         this.log.debug("Service Saving entity {}: {}", this.type.getSimpleName(), entity);
         return this.getSystemService().save(entity);
@@ -84,7 +84,7 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
      * @param entity parameter that indicates a generic entity
      */
 
-    @AllowPermissions(actions = {CrudAction.ActionNames.UPDATE})
+    @AllowPermissions(actions = {CrudActions.UPDATE})
     public T update(T entity) {
         this.log.debug("Service Updating entity entity {}: {} ", this.type.getSimpleName(), entity);
         if (entity.getId() > 0) {
@@ -98,7 +98,7 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
      *
      * @param id parameter that indicates a entity id
      */
-    @AllowPermissions(actions = CrudAction.ActionNames.REMOVE, checkById = true)
+    @AllowPermissions(actions = CrudActions.REMOVE, checkById = true)
     public void remove(long id) {
         this.log.debug("Service Removing entity {} with id {}", this.type.getSimpleName(), id);
         BaseEntity entity = this.getSystemService().find(id);
@@ -115,7 +115,7 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
      * @param id parameter that indicates a entity id
      * @return Entity if found
      */
-    @AllowPermissions(actions = CrudAction.ActionNames.FIND, checkById = true)
+    @AllowPermissions(actions = CrudActions.FIND, checkById = true)
     public T find(long id) {
         Query queryFilter = getSystemService().getQueryBuilderInstance().createQueryFilter("id=" + id);
         return this.find(queryFilter);
@@ -126,8 +126,8 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
      * @return
      */
     @Override
-    @AllowGenericPermissions(actions = {CrudAction.ActionNames.FIND})
-    @AllowPermissionsOnReturn(actions = {CrudAction.ActionNames.FIND})
+    @AllowGenericPermissions(actions = {CrudActions.FIND})
+    @AllowPermissionsOnReturn(actions = {CrudActions.FIND})
     public T find(Query filter) {
         this.log.debug("Service Find entity {} with id {}", this.type.getSimpleName(), filter);
         SecurityContext securityContext = getSecurityContext();
@@ -143,7 +143,7 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
      * @return
      */
     @Override
-    @AllowGenericPermissions(actions = CrudAction.ActionNames.FIND)
+    @AllowGenericPermissions(actions = CrudActions.FIND)
     public PaginableResult<T> findAll(Query filter, int delta, int page, QueryOrder queryOrder) {
         this.log.debug("Service Find all entities {} ", this.type.getSimpleName());
         SecurityContext securityContext = getSecurityContext();
@@ -202,7 +202,7 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
      * @return
      */
     @Override
-    @AllowGenericPermissions(actions = CrudAction.ActionNames.FIND)
+    @AllowGenericPermissions(actions = CrudActions.FIND)
     public long countAll(Query filter) {
         this.log.debug("Service countAll entities {}", this.type.getSimpleName());
         SecurityContext securityContext = getSecurityContext();
