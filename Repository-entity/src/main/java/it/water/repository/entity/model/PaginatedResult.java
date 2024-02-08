@@ -17,8 +17,10 @@
 
 package it.water.repository.entity.model;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import it.water.core.api.model.BaseEntity;
 import it.water.core.api.model.PaginableResult;
+import it.water.core.api.service.rest.WaterJsonView;
 import lombok.Getter;
 
 import java.util.Collection;
@@ -29,6 +31,7 @@ import java.util.Collection;
  * @Author Aristide Cittadino.
  * Class used to return paginated results on query.
  */
+@JsonView({WaterJsonView.Extended.class,WaterJsonView.Compact.class,WaterJsonView.Internal.class,WaterJsonView.Privacy.class,WaterJsonView.Public.class,WaterJsonView.Secured.class})
 public class PaginatedResult<T extends BaseEntity>
         implements PaginableResult<T> {
     /**
