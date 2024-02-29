@@ -101,8 +101,13 @@ public class TestEntity implements SharedEntity, ProtectedEntity {
     }
 
     @Override
-    public int getEntityVersion() {
+    public Integer getEntityVersion() {
         return entityVersion;
+    }
+
+    @Override
+    public void setEntityVersion(Integer integer) {
+
     }
 
     public void setEntityVersion(int entityVersion) {

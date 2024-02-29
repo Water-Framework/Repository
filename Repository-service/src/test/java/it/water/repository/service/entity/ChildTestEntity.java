@@ -72,8 +72,13 @@ public class ChildTestEntity implements OwnedChildResource, BaseEntity {
         this.entityModifyDate = entityModifyDate;
     }
 
-    public int getEntityVersion() {
+    public Integer getEntityVersion() {
         return entityVersion;
+    }
+
+    @Override
+    public void setEntityVersion(Integer integer) {
+
     }
 
     public void setEntityVersion(int entityVersion) {

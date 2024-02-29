@@ -16,24 +16,27 @@
 package it.water.repository.service;
 
 import it.water.core.api.bundle.ApplicationProperties;
+import it.water.core.api.model.User;
 import it.water.core.api.repository.query.Query;
 import it.water.core.api.repository.query.QueryOrder;
 import it.water.core.api.service.Service;
+import it.water.core.interceptors.annotations.Inject;
 import it.water.core.model.exceptions.ValidationException;
-import it.water.core.testing.utils.bundle.TestRuntimeInitializer;
-import it.water.core.testing.utils.junit.WaterTestExtension;
-import it.water.repository.entity.model.exceptions.DuplicateEntityException;
-import it.water.repository.entity.model.exceptions.EntityNotFound;
 import it.water.core.permission.exceptions.UnauthorizedException;
 import it.water.core.registry.model.ComponentConfigurationFactory;
-
+import it.water.core.testing.utils.api.TestPermissionManager;
+import it.water.core.testing.utils.bundle.TestRuntimeInitializer;
+import it.water.core.testing.utils.junit.WaterTestExtension;
 import it.water.core.testing.utils.model.TestHUser;
+import it.water.repository.entity.model.exceptions.DuplicateEntityException;
+import it.water.repository.entity.model.exceptions.EntityNotFound;
 import it.water.repository.service.api.*;
 import it.water.repository.service.entity.ChildTestEntity;
 import it.water.repository.service.entity.TestEntity;
 import it.water.repository.service.entity.TestValidationEntity;
 import it.water.repository.service.repository.ChildTestEntityRepositoryImpl;
 import it.water.repository.service.repository.TestEntityRepositoryImpl;
+import lombok.Setter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -46,8 +49,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WaterRepositoryServiceTest implements Service {
     private TestEntityRepositoryImpl workingRepo;
-
     private ChildTestEntityRepository childWorkingRepo;
+    @Inject
+    @Setter
+    //injecting test permission manager in order to perform some basic security tests
+    private TestPermissionManager testPermissionManager;
+
+    private User userOk;
+    private User userKo;
+
     @BeforeAll
     public void initializeTestFramework() {
         ComponentConfigurationFactory<TestEntityRepositoryImpl> factory = new ComponentConfigurationFactory<>();
@@ -55,9 +65,11 @@ class WaterRepositoryServiceTest implements Service {
         workingRepo = Mockito.mock(TestEntityRepositoryImpl.class);
         childWorkingRepo = Mockito.mock(ChildTestEntityRepositoryImpl.class);
         resetRepositoryMock();
+        this.userOk = testPermissionManager.addUser("usernameOk", "username", "username", "email@mail.com", true);
+        this.userKo = testPermissionManager.addUser("usernameKo", "usernameKo", "usernameKo", "email1@mail.com", false);
         TestRuntimeInitializer.getInstance().getComponentRegistry().registerComponent(TestEntityRepository.class, workingRepo, factory.build());
         TestRuntimeInitializer.getInstance().getComponentRegistry().registerComponent(ChildTestEntityRepository.class, childWorkingRepo, factory.build());
-        TestRuntimeInitializer.getInstance().getComponentRegistry().findComponent(TestEntityActionManager.class, null).registerActions();
+        TestRuntimeInitializer.getInstance().getComponentRegistry().findComponent(TestEntityActionManager.class, null).registerActions(TestEntity.class);
     }
 
     /**
@@ -66,7 +78,6 @@ class WaterRepositoryServiceTest implements Service {
     @Test
     void testRegisteredComponents() {
         Assertions.assertNotNull(TestRuntimeInitializer.getInstance().getComponentRegistry());
-        Assertions.assertNotNull(TestRuntimeInitializer.getInstance().getRuntime());
         Assertions.assertNotNull(TestRuntimeInitializer.getInstance().getComponentRegistry().findComponents(ApplicationProperties.class, null));
         Assertions.assertNotNull(TestRuntimeInitializer.getInstance().getComponentRegistry().findComponents(TestEntityApi.class, null));
         Assertions.assertNotNull(TestRuntimeInitializer.getInstance().getComponentRegistry().findComponents(TestEntitySystemApi.class, null));
@@ -74,9 +85,9 @@ class WaterRepositoryServiceTest implements Service {
 
     @Test
     void testEntityMethodSuccess() {
-        TestRuntimeInitializer.getInstance().impersonate("usernameOk", false, 1);
+        TestRuntimeInitializer.getInstance().impersonate(userOk);
 
-        TestHUser user = new TestHUser("name", "lastname", "email@amil.com", "usernameOk", null, false);
+        TestHUser user = new TestHUser(1000, "name", "lastname", "email@amil.com", "usernameOk", null, false);
         TestEntity testEntity = new TestEntity();
         testEntity.setId(1);
         testEntity.setEntityField("field");
@@ -98,14 +109,14 @@ class WaterRepositoryServiceTest implements Service {
 
     @Test
     void testEntityMethodFail() {
-        TestRuntimeInitializer.getInstance().impersonate("usernameKo", false, 1);
-        TestHUser user = new TestHUser("name", "lastname", "email@amil.com", "usernameOk", null, false);
+        TestRuntimeInitializer.getInstance().impersonate(userKo);
+        TestHUser user = new TestHUser(10001, "name", "lastname", "email@amil.com", "usernameOk", null, false);
         TestEntity testEntity = new TestEntity();
         testEntity.setId(1);
         testEntity.setEntityField("field");
         testEntity.setUserOwner(user);
         Assertions.assertThrows(UnauthorizedException.class, () -> getTestEntityApi().save(testEntity).getId());
-        TestRuntimeInitializer.getInstance().impersonate("usernameOk", false, 1);
+        TestRuntimeInitializer.getInstance().impersonate(userOk);
         Mockito.doThrow(DuplicateEntityException.class).when(workingRepo).persist(testEntity);
         Mockito.doThrow(DuplicateEntityException.class).when(workingRepo).update(testEntity);
         Mockito.doReturn(null).when(workingRepo).find(1l);
@@ -149,19 +160,19 @@ class WaterRepositoryServiceTest implements Service {
     }
 
     @Test
-    void testValidationSuccess(){
+    void testValidationSuccess() {
         TestValidationEntity t = new TestValidationEntity();
         t.setId(1);
         t.setEntityField("prova");
-        TestValidationEntitySystemApi api = TestRuntimeInitializer.getInstance().getComponentRegistry().findComponent(TestValidationEntitySystemApi.class,null);
+        TestValidationEntitySystemApi api = TestRuntimeInitializer.getInstance().getComponentRegistry().findComponent(TestValidationEntitySystemApi.class, null);
         Assertions.assertDoesNotThrow(() -> api.validate(t));
     }
 
     @Test
-    void testValidationFail(){
+    void testValidationFail() {
         TestValidationEntity t = new TestValidationEntity();
         t.setId(1);
-        TestValidationEntitySystemApi api = TestRuntimeInitializer.getInstance().getComponentRegistry().findComponent(TestValidationEntitySystemApi.class,null);
-        Assertions.assertThrows(ValidationException.class,() -> api.validate(t));
+        TestValidationEntitySystemApi api = TestRuntimeInitializer.getInstance().getComponentRegistry().findComponent(TestValidationEntitySystemApi.class, null);
+        Assertions.assertThrows(ValidationException.class, () -> api.validate(t));
     }
 }
