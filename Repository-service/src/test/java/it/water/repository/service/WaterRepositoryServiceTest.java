@@ -16,6 +16,7 @@
 package it.water.repository.service;
 
 import it.water.core.api.bundle.ApplicationProperties;
+import it.water.core.api.bundle.Runtime;
 import it.water.core.api.model.User;
 import it.water.core.api.repository.query.Query;
 import it.water.core.api.repository.query.QueryOrder;
@@ -55,6 +56,10 @@ class WaterRepositoryServiceTest implements Service {
     //injecting test permission manager in order to perform some basic security tests
     private TestPermissionManager testPermissionManager;
 
+    @Inject
+    @Setter
+    private Runtime runtime;
+
     private User userOk;
     private User userKo;
 
@@ -85,7 +90,7 @@ class WaterRepositoryServiceTest implements Service {
 
     @Test
     void testEntityMethodSuccess() {
-        TestRuntimeInitializer.getInstance().impersonate(userOk);
+        TestRuntimeInitializer.getInstance().impersonate(userOk,runtime);
 
         TestHUser user = new TestHUser(1000, "name", "lastname", "email@amil.com", "usernameOk", null, false);
         TestEntity testEntity = new TestEntity();
@@ -109,14 +114,14 @@ class WaterRepositoryServiceTest implements Service {
 
     @Test
     void testEntityMethodFail() {
-        TestRuntimeInitializer.getInstance().impersonate(userKo);
+        TestRuntimeInitializer.getInstance().impersonate(userKo,runtime);
         TestHUser user = new TestHUser(10001, "name", "lastname", "email@amil.com", "usernameOk", null, false);
         TestEntity testEntity = new TestEntity();
         testEntity.setId(1);
         testEntity.setEntityField("field");
         testEntity.setUserOwner(user);
         Assertions.assertThrows(UnauthorizedException.class, () -> getTestEntityApi().save(testEntity).getId());
-        TestRuntimeInitializer.getInstance().impersonate(userOk);
+        TestRuntimeInitializer.getInstance().impersonate(userOk,runtime);
         Mockito.doThrow(DuplicateEntityException.class).when(workingRepo).persist(testEntity);
         Mockito.doThrow(DuplicateEntityException.class).when(workingRepo).update(testEntity);
         Mockito.doReturn(null).when(workingRepo).find(1l);
