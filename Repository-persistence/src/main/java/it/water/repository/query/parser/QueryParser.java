@@ -65,6 +65,7 @@ public class QueryParser {
 
     public Query parse() throws InstantiationException, IllegalAccessException, IOException, InvocationTargetException, NoSuchMethodException {
         Query result = null;
+        tokenizer.wordChars('@','@');
         tokenizer.nextToken();
         while (tokenizer.ttype != StreamTokenizer.TT_EOF) {
             result = this.parseExpression(result);
