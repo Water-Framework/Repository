@@ -143,7 +143,7 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
      * @return
      */
     @Override
-    @AllowGenericPermissions(actions = CrudActions.FIND)
+    @AllowGenericPermissions(actions = CrudActions.FIND_ALL)
     public PaginableResult<T> findAll(Query filter, int delta, int page, QueryOrder queryOrder) {
         this.log.debug("Service Find all entities {} ", this.type.getSimpleName());
         SecurityContext securityContext = getSecurityContext();
