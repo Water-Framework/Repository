@@ -17,9 +17,9 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:' + project.junitJupiterVersion
 	testImplementation 'org.atteo.classindex:classindex:' + project.atteoClassIndexVersion
 	testImplementation 'org.hibernate:hibernate-core:'+project.hibernateVersion
-	testImplementation 'javax.persistence:javax.persistence-api:'+project.javaxPersistenceVersion
+	testImplementation 'jakarta.persistence:jakarta.persistence-api:'+project.jakartaPersistenceVersion
 	testImplementation 'org.hsqldb:hsqldb:2.4.1'
-	testImplementation 'javax.validation:validation-api:2.0.1.Final'
+	testImplementation 'jakarta.validation:jakarta.validation-api:'+project.jakartaValidationVersion
 }
 
 test {
