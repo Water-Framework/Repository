@@ -59,13 +59,6 @@ public abstract class AbstractEntity extends AbstractResource implements BaseEnt
     @Getter
     @Setter(AccessLevel.PROTECTED)
     protected Date entityModifyDate;
-
-    @Override
-    public String getSystemApiClassName() {
-        String className = this.getClass().getName();
-        return className.replace(".model.", ".api.") + "SystemApi";
-    }
-
     protected AbstractEntity() {
         initEntity(0, new Date(Instant.now().toEpochMilli()));
     }
