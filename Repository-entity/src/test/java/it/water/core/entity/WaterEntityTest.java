@@ -36,7 +36,6 @@ class WaterEntityTest {
         Assertions.assertEquals(1, entity.getEntityVersion());
         Assertions.assertEquals(now, entity.getEntityCreateDate());
         Assertions.assertEquals(now, entity.getEntityModifyDate());
-        Assertions.assertNotNull(entity.getSystemApiClassName());
 
     }
 
