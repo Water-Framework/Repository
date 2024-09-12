@@ -19,10 +19,10 @@ import it.water.core.api.entity.owned.OwnedChildResource;
 import it.water.core.api.model.BaseEntity;
 import it.water.repository.service.api.ChildTestEntitySystemApi;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
 import java.util.Date;
 
 @Entity
@@ -83,10 +83,5 @@ public class ChildTestEntity implements OwnedChildResource, BaseEntity {
 
     public void setEntityVersion(int entityVersion) {
         this.entityVersion = entityVersion;
-    }
-
-    @Override
-    public String getSystemApiClassName() {
-        return ChildTestEntitySystemApi.class.getName();
     }
 }

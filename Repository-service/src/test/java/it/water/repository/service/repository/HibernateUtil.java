@@ -15,8 +15,8 @@
  */
 package it.water.repository.service.repository;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 
 public class HibernateUtil {
     private static final String PERSISTENCE_UNIT_NAME = "water-respository";

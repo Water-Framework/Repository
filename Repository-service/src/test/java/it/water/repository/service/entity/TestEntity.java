@@ -20,7 +20,7 @@ import it.water.core.api.model.User;
 import it.water.core.api.permission.ProtectedEntity;
 import it.water.repository.service.TestEntitySystemServiceImpl;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -109,13 +109,7 @@ public class TestEntity implements SharedEntity, ProtectedEntity {
     public void setEntityVersion(Integer integer) {
 
     }
-
     public void setEntityVersion(int entityVersion) {
         this.entityVersion = entityVersion;
-    }
-
-    @Override
-    public String getSystemApiClassName() {
-        return TestEntitySystemServiceImpl.class.getName();
     }
 }
