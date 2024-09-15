@@ -36,6 +36,7 @@ import it.water.core.registry.model.exception.NoComponentRegistryFoundException;
 import it.water.core.service.BaseAbstractSystemService;
 import it.water.repository.entity.model.exceptions.DuplicateEntityException;
 import it.water.repository.entity.model.exceptions.EntityNotFound;
+import it.water.repository.entity.model.exceptions.NoResultException;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,6 +121,9 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
             return entity;
         } catch (DuplicateEntityException e) {
             getLog().warn("Update failed: entity is duplicated!");
+            throw e;
+        } catch (NoResultException e) {
+            getLog().warn("Update failed: entity to update not found!");
             throw e;
         } catch (Exception e1) {
             throw new WaterRuntimeException(e1.getMessage());
@@ -243,7 +247,7 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
      */
     @Override
     protected void validate(Resource resource) {
-        if(this.waterValidator != null){
+        if (this.waterValidator != null) {
             this.waterValidator.validate(resource);
         }
     }
