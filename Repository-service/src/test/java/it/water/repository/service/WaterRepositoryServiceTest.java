@@ -21,6 +21,7 @@ import it.water.core.api.model.User;
 import it.water.core.api.repository.query.Query;
 import it.water.core.api.repository.query.QueryOrder;
 import it.water.core.api.service.Service;
+import it.water.core.api.user.UserManager;
 import it.water.core.interceptors.annotations.Inject;
 import it.water.core.model.exceptions.ValidationException;
 import it.water.core.permission.exceptions.UnauthorizedException;
@@ -58,6 +59,10 @@ class WaterRepositoryServiceTest implements Service {
 
     @Inject
     @Setter
+    private UserManager userManager;
+
+    @Inject
+    @Setter
     private Runtime runtime;
 
     private User userOk;
@@ -70,8 +75,8 @@ class WaterRepositoryServiceTest implements Service {
         workingRepo = Mockito.mock(TestEntityRepositoryImpl.class);
         childWorkingRepo = Mockito.mock(ChildTestEntityRepositoryImpl.class);
         resetRepositoryMock();
-        this.userOk = testPermissionManager.addUser("usernameOk", "username", "username", "email@mail.com", true);
-        this.userKo = testPermissionManager.addUser("usernameKo", "usernameKo", "usernameKo", "email1@mail.com", false);
+        this.userOk = userManager.addUser("usernameOk", "username", "username", "email@mail.com","Password1_","salt", true);
+        this.userKo = userManager.addUser("usernameKo", "usernameKo", "usernameKo", "email1@mail.com","Password1_","salt", false);
         TestRuntimeInitializer.getInstance().getComponentRegistry().registerComponent(TestEntityRepository.class, workingRepo, factory.build());
         TestRuntimeInitializer.getInstance().getComponentRegistry().registerComponent(ChildTestEntityRepository.class, childWorkingRepo, factory.build());
         TestRuntimeInitializer.getInstance().getComponentRegistry().findComponent(TestEntityActionManager.class, null).registerActions(TestEntity.class);
