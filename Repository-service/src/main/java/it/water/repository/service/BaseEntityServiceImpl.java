@@ -18,6 +18,7 @@
 package it.water.repository.service;
 
 
+import it.water.core.api.bundle.Runtime;
 import it.water.core.api.entity.shared.SharedEntity;
 import it.water.core.api.entity.shared.SharingEntityService;
 import it.water.core.api.model.BaseEntity;
@@ -29,6 +30,7 @@ import it.water.core.api.repository.query.QueryOrder;
 import it.water.core.api.service.BaseEntityApi;
 import it.water.core.api.service.BaseEntitySystemApi;
 import it.water.core.api.service.OwnershipResourceService;
+import it.water.core.interceptors.annotations.Inject;
 import it.water.core.permission.action.CrudActions;
 import it.water.core.permission.annotations.AllowGenericPermissions;
 import it.water.core.permission.annotations.AllowPermissions;
@@ -36,6 +38,7 @@ import it.water.core.permission.annotations.AllowPermissionsOnReturn;
 import it.water.core.permission.exceptions.UnauthorizedException;
 import it.water.core.service.BaseAbstractService;
 import it.water.repository.entity.model.exceptions.EntityNotFound;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +55,11 @@ import java.util.List;
  */
 public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAbstractService implements BaseEntityApi<T> {
     private Logger log = LoggerFactory.getLogger(this.getClass().getName());
+
+    @Inject
+    @Setter
+    private Runtime runtime;
+
     /**
      * Generic class for  platform
      */
@@ -130,7 +138,7 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
     @AllowPermissionsOnReturn(actions = {CrudActions.FIND})
     public T find(Query filter) {
         this.log.debug("Service Find entity {} with id {}", this.type.getSimpleName(), filter);
-        SecurityContext securityContext = getSecurityContext();
+        SecurityContext securityContext = runtime.getSecurityContext();
         filter = this.createConditionForOwnedOrSharedResource(filter, securityContext);
         return this.getSystemService().find(filter);
     }
@@ -146,7 +154,7 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
     @AllowGenericPermissions(actions = CrudActions.FIND_ALL)
     public PaginableResult<T> findAll(Query filter, int delta, int page, QueryOrder queryOrder) {
         this.log.debug("Service Find all entities {} ", this.type.getSimpleName());
-        SecurityContext securityContext = getSecurityContext();
+        SecurityContext securityContext = runtime.getSecurityContext();
         filter = this.createConditionForOwnedOrSharedResource(filter, securityContext);
         return this.getSystemService().findAll(filter, delta, page, queryOrder);
     }
@@ -205,7 +213,7 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
     @AllowGenericPermissions(actions = CrudActions.FIND)
     public long countAll(Query filter) {
         this.log.debug("Service countAll entities {}", this.type.getSimpleName());
-        SecurityContext securityContext = getSecurityContext();
+        SecurityContext securityContext = runtime.getSecurityContext();
         filter = this.createConditionForOwnedOrSharedResource(filter, securityContext);
         return this.getSystemService().countAll(filter);
     }
