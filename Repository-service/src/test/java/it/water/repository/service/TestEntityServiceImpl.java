@@ -35,19 +35,11 @@ public class TestEntityServiceImpl extends BaseEntityServiceImpl<TestEntity> imp
     @Inject
     private ComponentRegistry waterComponentRegistry;
 
-    @Inject
-    private Runtime waterRuntime;
-
     /**
      * Constructor for WaterBaseEntitySystemServiceImpl
      */
     public TestEntityServiceImpl() {
         super(TestEntity.class);
-    }
-
-    @Override
-    protected SecurityContext getSecurityContext() {
-        return this.waterRuntime.getSecurityContext();
     }
 
     @Override
@@ -66,10 +58,6 @@ public class TestEntityServiceImpl extends BaseEntityServiceImpl<TestEntity> imp
     @Override
     protected ComponentRegistry getComponentRegistry() {
         return waterComponentRegistry;
-    }
-
-    public void setWaterRuntime(Runtime waterRuntime) {
-        this.waterRuntime = waterRuntime;
     }
 
     @Override

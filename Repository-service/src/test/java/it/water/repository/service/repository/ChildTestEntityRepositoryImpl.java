@@ -104,6 +104,7 @@ public class ChildTestEntityRepositoryImpl implements ChildTestEntityRepository 
         return paginatedResult;
     }
 
+
     @Override
     public QueryBuilder getQueryBuilderInstance() {
         return new DefaultQueryBuilder();

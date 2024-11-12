@@ -18,6 +18,9 @@ package it.water.repository.service.entity;
 import it.water.core.api.entity.shared.SharedEntity;
 import it.water.core.api.model.User;
 import it.water.core.api.permission.ProtectedEntity;
+import it.water.core.permission.action.CrudActions;
+import it.water.core.permission.annotations.AccessControl;
+import it.water.core.permission.annotations.DefaultRoleAccess;
 import it.water.repository.service.TestEntitySystemServiceImpl;
 
 import jakarta.persistence.*;
@@ -27,7 +30,13 @@ import java.util.Set;
 
 @Entity
 @Table(uniqueConstraints = {@UniqueConstraint(columnNames = "uniqueField"), @UniqueConstraint(columnNames = {"combinedUniqueField1", "combinedUniqueField2"})})
+@AccessControl(availableActions = {CrudActions.SAVE, CrudActions.UPDATE, CrudActions.FIND, CrudActions.FIND_ALL, CrudActions.REMOVE},
+        rolesPermissions = {
+                //Admin role can do everything
+                @DefaultRoleAccess(roleName = TestEntity.TEST_ENTITY_SAMPLE_ROLE, actions = {CrudActions.SAVE, CrudActions.UPDATE, CrudActions.FIND, CrudActions.FIND_ALL, CrudActions.REMOVE}),
+        })
 public class TestEntity implements SharedEntity, ProtectedEntity {
+    public static final String TEST_ENTITY_SAMPLE_ROLE = "TEST_ENTITY_SAMPLE_ROLE";
     @Id
     private long id;
     private String entityField;
@@ -56,7 +65,7 @@ public class TestEntity implements SharedEntity, ProtectedEntity {
         this.owner = user;
     }
 
-    @OneToMany(mappedBy = "parent",cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "parent",cascade = CascadeType.ALL)
     public Set<ChildTestEntity> getChildren() {
         return children;
     }

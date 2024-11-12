@@ -17,6 +17,9 @@ package it.water.repository.service.entity;
 
 import it.water.core.api.entity.owned.OwnedChildResource;
 import it.water.core.api.model.BaseEntity;
+import it.water.core.permission.action.CrudActions;
+import it.water.core.permission.annotations.AccessControl;
+import it.water.core.permission.annotations.DefaultRoleAccess;
 import it.water.repository.service.api.ChildTestEntitySystemApi;
 
 import jakarta.persistence.Entity;
@@ -26,6 +29,11 @@ import jakarta.persistence.Transient;
 import java.util.Date;
 
 @Entity
+@AccessControl(availableActions = {CrudActions.SAVE, CrudActions.UPDATE, CrudActions.FIND, CrudActions.FIND_ALL, CrudActions.REMOVE},
+        rolesPermissions = {
+                //Admin role can do everything
+                @DefaultRoleAccess(roleName = TestEntity.TEST_ENTITY_SAMPLE_ROLE, actions = {CrudActions.SAVE, CrudActions.UPDATE, CrudActions.FIND, CrudActions.FIND_ALL, CrudActions.REMOVE}),
+        })
 public class ChildTestEntity implements OwnedChildResource, BaseEntity {
     @Id
     private long id;

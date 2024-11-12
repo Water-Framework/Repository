@@ -20,6 +20,7 @@ import it.water.core.api.bundle.Runtime;
 import it.water.core.api.model.User;
 import it.water.core.api.repository.query.Query;
 import it.water.core.api.repository.query.QueryOrder;
+import it.water.core.api.role.RoleManager;
 import it.water.core.api.service.Service;
 import it.water.core.api.user.UserManager;
 import it.water.core.interceptors.annotations.Inject;
@@ -63,10 +64,15 @@ class WaterRepositoryServiceTest implements Service {
 
     @Inject
     @Setter
+    private RoleManager roleManager;
+
+    @Inject
+    @Setter
     private Runtime runtime;
 
     private User userOk;
     private User userKo;
+    private User readUser;
 
     @BeforeAll
     public void initializeTestFramework() {
@@ -76,7 +82,9 @@ class WaterRepositoryServiceTest implements Service {
         childWorkingRepo = Mockito.mock(ChildTestEntityRepositoryImpl.class);
         resetRepositoryMock();
         this.userOk = userManager.addUser("usernameOk", "username", "username", "email@mail.com","Password1_","salt", true);
+        this.readUser = userManager.addUser("readUser", "username", "username", "email@mail.com","Password1_","salt", false);
         this.userKo = userManager.addUser("usernameKo", "usernameKo", "usernameKo", "email1@mail.com","Password1_","salt", false);
+        roleManager.addRole(this.readUser.getId(),roleManager.getRole(TestEntity.TEST_ENTITY_SAMPLE_ROLE));
         TestRuntimeInitializer.getInstance().getComponentRegistry().registerComponent(TestEntityRepository.class, workingRepo, factory.build());
         TestRuntimeInitializer.getInstance().getComponentRegistry().registerComponent(ChildTestEntityRepository.class, childWorkingRepo, factory.build());
         TestRuntimeInitializer.getInstance().getComponentRegistry().findComponent(TestEntityActionManager.class, null).registerActions(TestEntity.class);
@@ -115,6 +123,10 @@ class WaterRepositoryServiceTest implements Service {
         Assertions.assertEquals(1L, getTestEntityApi().countAll(null));
         Assertions.assertDoesNotThrow(() -> getTestEntityApi().remove(1));
         Assertions.assertEquals(1, getTestEntityApi().findAll(workingRepo.getQueryBuilderInstance().field("entityField").equalTo("field1"), 1, 1, null).getResults().size());
+        TestRuntimeInitializer.getInstance().impersonate(readUser,runtime);
+        //Bypassing permission and checking only impersonate
+        Assertions.assertEquals(1, getTestEntityApi().findAll(workingRepo.getQueryBuilderInstance().field("entityField").equalTo("field1"), 1, 1, null).getResults().size());
+        Assertions.assertEquals(1, getChildEntityApi().findAll(null, 1, 1, null).getResults().size());
     }
 
     @Test
@@ -125,22 +137,28 @@ class WaterRepositoryServiceTest implements Service {
         testEntity.setId(1);
         testEntity.setEntityField("field");
         testEntity.setUserOwner(user);
-        Assertions.assertThrows(UnauthorizedException.class, () -> getTestEntityApi().save(testEntity).getId());
+        TestEntityApi testEntityApi = getTestEntityApi();
+        Assertions.assertThrows(UnauthorizedException.class, () -> testEntityApi.save(testEntity));
         TestRuntimeInitializer.getInstance().impersonate(userOk,runtime);
         Mockito.doThrow(DuplicateEntityException.class).when(workingRepo).persist(testEntity);
         Mockito.doThrow(DuplicateEntityException.class).when(workingRepo).update(testEntity);
         Mockito.doReturn(null).when(workingRepo).find(1l);
-        Assertions.assertThrows(DuplicateEntityException.class, () -> this.getTestEntityApi().save(testEntity));
-        Assertions.assertThrows(DuplicateEntityException.class, () -> this.getTestEntityApi().update(testEntity));
-        Assertions.assertThrows(EntityNotFound.class, () -> this.getTestEntityApi().remove(1l));
+        TestEntityApi serviceTest = this.getTestEntityApi();
+        Assertions.assertThrows(DuplicateEntityException.class, () -> serviceTest.save(testEntity));
+        Assertions.assertThrows(DuplicateEntityException.class, () -> serviceTest.update(testEntity));
+        Assertions.assertThrows(EntityNotFound.class, () -> serviceTest.remove(1l));
         testEntity.setId(-1);
-        Assertions.assertThrows(EntityNotFound.class, () -> this.getTestEntityApi().update(testEntity));
+        Assertions.assertThrows(EntityNotFound.class, () -> serviceTest.update(testEntity));
         //resetting repository mock to invoke real methods
         resetRepositoryMock();
     }
 
     private TestEntityApi getTestEntityApi() {
         return TestRuntimeInitializer.getInstance().getComponentRegistry().findComponent(TestEntityApi.class, null);
+    }
+
+    private ChildTestEntityApi getChildEntityApi() {
+        return TestRuntimeInitializer.getInstance().getComponentRegistry().findComponent(ChildTestEntityApi.class, null);
     }
 
     private ChildTestEntityApi getChildTestEntityApi() {
@@ -166,7 +184,7 @@ class WaterRepositoryServiceTest implements Service {
         Mockito.doCallRealMethod().when(childWorkingRepo).find(Mockito.any(Long.class));
         Mockito.doCallRealMethod().when(childWorkingRepo).find(Mockito.any(String.class));
         Mockito.doCallRealMethod().when(childWorkingRepo).find(Mockito.any(Query.class));
-        Mockito.doCallRealMethod().when(childWorkingRepo).findAll(Mockito.any(Integer.class), Mockito.any(Integer.class), Mockito.any(Query.class), Mockito.nullable(QueryOrder.class));
+        Mockito.doCallRealMethod().when(childWorkingRepo).findAll(Mockito.nullable(Integer.class), Mockito.nullable(Integer.class), Mockito.nullable(Query.class), Mockito.nullable(QueryOrder.class));
     }
 
     @Test

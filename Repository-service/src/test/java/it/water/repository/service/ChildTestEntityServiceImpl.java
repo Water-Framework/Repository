@@ -19,6 +19,7 @@ import it.water.core.api.entity.owned.OwnedResource;
 import it.water.core.api.permission.SecurityContext;
 import it.water.core.api.registry.ComponentRegistry;
 import it.water.core.api.service.BaseEntitySystemApi;
+import it.water.core.api.service.OwnershipResourceService;
 import it.water.core.interceptors.annotations.FrameworkComponent;
 import it.water.core.interceptors.annotations.Inject;
 import it.water.repository.service.api.ChildTestEntityApi;
@@ -29,7 +30,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @FrameworkComponent
-public class ChildTestEntityServiceImpl extends OwnedChildBaseEntityServiceImpl<ChildTestEntity> implements ChildTestEntityApi {
+public class ChildTestEntityServiceImpl extends OwnedChildBaseEntityServiceImpl<ChildTestEntity> implements ChildTestEntityApi, OwnershipResourceService {
 
     @Inject
     @Setter
@@ -66,7 +67,8 @@ public class ChildTestEntityServiceImpl extends OwnedChildBaseEntityServiceImpl<
     }
 
     @Override
-    protected SecurityContext getSecurityContext() {
-        return null;
+    public String getOwnerFieldPath() {
+        return "parent.owner";
     }
 }
+
