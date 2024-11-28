@@ -38,6 +38,8 @@ import it.water.core.permission.annotations.AllowPermissionsOnReturn;
 import it.water.core.permission.exceptions.UnauthorizedException;
 import it.water.core.service.BaseAbstractService;
 import it.water.repository.entity.model.exceptions.EntityNotFound;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +60,7 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
 
     @Inject
     @Setter
+    @Getter(AccessLevel.PROTECTED)
     private Runtime runtime;
 
     /**
