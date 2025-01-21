@@ -212,7 +212,7 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
             if (eventProducer != null)
                 eventProducer.produceEvent(entity, eventClass); // execute pre actions after removing
         } catch (NoComponentRegistryFoundException e) {
-            log.warn("No Event Producer Found for this project, skipping producing event {}", eventClass);
+            log.debug("No Event Producer Found for this project, skipping producing event {}", eventClass);
         }
     }
 
@@ -228,7 +228,7 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
             if (eventProducer != null)
                 eventProducer.produceDetailedEvent(beforeUpdateEntity, entity, eventClass); // execute pre actions after removing
         } catch (NoComponentRegistryFoundException e) {
-            log.warn("No Event Producer Found for this project, skipping producing event {}", eventClass);
+            log.debug("No Event Producer Found for this project, skipping producing event {}", eventClass);
         }
     }
 
