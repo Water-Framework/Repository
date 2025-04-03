@@ -18,10 +18,7 @@
 package it.water.repository.service;
 
 import it.water.core.api.entity.events.*;
-import it.water.core.api.model.BaseEntity;
-import it.water.core.api.model.EntityExtension;
-import it.water.core.api.model.PaginableResult;
-import it.water.core.api.model.Resource;
+import it.water.core.api.model.*;
 import it.water.core.api.model.events.ApplicationEventProducer;
 import it.water.core.api.model.events.Event;
 import it.water.core.api.registry.ComponentRegistry;
@@ -265,7 +262,7 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
      */
     private void validateEntityExtension(T entity) {
         //validating eventually the entity expansion
-        EntityExtension extension = entity.getEntityExtension();
+        EntityExtension extension = entity.isExpandableEntity()?((ExpandableEntity)entity).getExtension():null;
         if (extension != null)
             this.validate(extension);
     }
