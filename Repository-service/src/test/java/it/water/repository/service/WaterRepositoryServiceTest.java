@@ -48,6 +48,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
+
 @ExtendWith({MockitoExtension.class, WaterTestExtension.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WaterRepositoryServiceTest implements Service {
@@ -105,7 +107,7 @@ class WaterRepositoryServiceTest implements Service {
     void testEntityMethodSuccess() {
         TestRuntimeInitializer.getInstance().impersonate(userOk,runtime);
 
-        TestHUser user = new TestHUser(1000, "name", "lastname", "email@amil.com", "usernameOk", null, false);
+        TestHUser user = new TestHUser(1000, "name", "lastname", "email@amil.com", "usernameOk", "Password._","salt", Collections.emptyList(),false,true);
         TestEntity testEntity = new TestEntity();
         testEntity.setId(1);
         testEntity.setEntityField("field");
@@ -132,7 +134,7 @@ class WaterRepositoryServiceTest implements Service {
     @Test
     void testEntityMethodFail() {
         TestRuntimeInitializer.getInstance().impersonate(userKo,runtime);
-        TestHUser user = new TestHUser(10001, "name", "lastname", "email@amil.com", "usernameOk", null, false);
+        TestHUser user = new TestHUser(10001, "name", "lastname", "email@amil.com", "usernameOk", "Password._","salt",Collections.emptyList(),false, true);
         TestEntity testEntity = new TestEntity();
         testEntity.setId(1);
         testEntity.setEntityField("field");
@@ -167,6 +169,7 @@ class WaterRepositoryServiceTest implements Service {
 
     private void resetRepositoryMock() {
         Mockito.doCallRealMethod().when(workingRepo).remove(Mockito.any(Long.class));
+        Mockito.doCallRealMethod().when(workingRepo).getEntityType();
         Mockito.doCallRealMethod().when(workingRepo).getQueryBuilderInstance();
         Mockito.doCallRealMethod().when(workingRepo).persist(Mockito.any());
         Mockito.doCallRealMethod().when(workingRepo).update(Mockito.any());
@@ -177,6 +180,7 @@ class WaterRepositoryServiceTest implements Service {
         Mockito.doCallRealMethod().when(workingRepo).findAll(Mockito.any(Integer.class), Mockito.any(Integer.class), Mockito.any(Query.class), Mockito.nullable(QueryOrder.class));
 
         Mockito.doCallRealMethod().when(childWorkingRepo).remove(Mockito.any(Long.class));
+        Mockito.doCallRealMethod().when(childWorkingRepo).getEntityType();
         Mockito.doCallRealMethod().when(childWorkingRepo).getQueryBuilderInstance();
         Mockito.doCallRealMethod().when(childWorkingRepo).persist(Mockito.any());
         Mockito.doCallRealMethod().when(childWorkingRepo).update(Mockito.any());
