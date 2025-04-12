@@ -30,7 +30,6 @@ import it.water.core.registry.model.ComponentConfigurationFactory;
 import it.water.core.testing.utils.api.TestPermissionManager;
 import it.water.core.testing.utils.bundle.TestRuntimeInitializer;
 import it.water.core.testing.utils.junit.WaterTestExtension;
-import it.water.core.testing.utils.model.TestHUser;
 import it.water.repository.entity.model.exceptions.DuplicateEntityException;
 import it.water.repository.entity.model.exceptions.EntityNotFound;
 import it.water.repository.service.api.*;
@@ -47,8 +46,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Collections;
 
 @ExtendWith({MockitoExtension.class, WaterTestExtension.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -83,10 +80,10 @@ class WaterRepositoryServiceTest implements Service {
         workingRepo = Mockito.mock(TestEntityRepositoryImpl.class);
         childWorkingRepo = Mockito.mock(ChildTestEntityRepositoryImpl.class);
         resetRepositoryMock();
-        this.userOk = userManager.addUser("usernameOk", "username", "username", "email@mail.com","Password1_","salt", true);
-        this.readUser = userManager.addUser("readUser", "username", "username", "email@mail.com","Password1_","salt", false);
-        this.userKo = userManager.addUser("usernameKo", "usernameKo", "usernameKo", "email1@mail.com","Password1_","salt", false);
-        roleManager.addRole(this.readUser.getId(),roleManager.getRole(TestEntity.TEST_ENTITY_SAMPLE_ROLE));
+        this.userOk = userManager.addUser("usernameOk", "username", "username", "email@mail.com", "Password1_", "salt", true);
+        this.readUser = userManager.addUser("readUser", "username", "username", "email@mail.com", "Password1_", "salt", false);
+        this.userKo = userManager.addUser("usernameKo", "usernameKo", "usernameKo", "email1@mail.com", "Password1_", "salt", false);
+        roleManager.addRole(this.readUser.getId(), roleManager.getRole(TestEntity.TEST_ENTITY_SAMPLE_ROLE));
         TestRuntimeInitializer.getInstance().getComponentRegistry().registerComponent(TestEntityRepository.class, workingRepo, factory.build());
         TestRuntimeInitializer.getInstance().getComponentRegistry().registerComponent(ChildTestEntityRepository.class, childWorkingRepo, factory.build());
         TestRuntimeInitializer.getInstance().getComponentRegistry().findComponent(TestEntityActionManager.class, null).registerActions(TestEntity.class);
@@ -105,13 +102,10 @@ class WaterRepositoryServiceTest implements Service {
 
     @Test
     void testEntityMethodSuccess() {
-        TestRuntimeInitializer.getInstance().impersonate(userOk,runtime);
-
-        TestHUser user = new TestHUser(1000, "name", "lastname", "email@amil.com", "usernameOk", "Password._","salt", Collections.emptyList(),false,true);
+        TestRuntimeInitializer.getInstance().impersonate(userOk, runtime);
         TestEntity testEntity = new TestEntity();
         testEntity.setId(1);
         testEntity.setEntityField("field");
-        testEntity.setUserOwner(user);
         ChildTestEntity childTestEntity = new ChildTestEntity();
         childTestEntity.setParent(testEntity);
         testEntity.getChildren().add(childTestEntity);
@@ -125,7 +119,7 @@ class WaterRepositoryServiceTest implements Service {
         Assertions.assertEquals(1L, getTestEntityApi().countAll(null));
         Assertions.assertDoesNotThrow(() -> getTestEntityApi().remove(1));
         Assertions.assertEquals(1, getTestEntityApi().findAll(workingRepo.getQueryBuilderInstance().field("entityField").equalTo("field1"), 1, 1, null).getResults().size());
-        TestRuntimeInitializer.getInstance().impersonate(readUser,runtime);
+        TestRuntimeInitializer.getInstance().impersonate(readUser, runtime);
         //Bypassing permission and checking only impersonate
         Assertions.assertEquals(1, getTestEntityApi().findAll(workingRepo.getQueryBuilderInstance().field("entityField").equalTo("field1"), 1, 1, null).getResults().size());
         Assertions.assertEquals(1, getChildEntityApi().findAll(null, 1, 1, null).getResults().size());
@@ -133,15 +127,13 @@ class WaterRepositoryServiceTest implements Service {
 
     @Test
     void testEntityMethodFail() {
-        TestRuntimeInitializer.getInstance().impersonate(userKo,runtime);
-        TestHUser user = new TestHUser(10001, "name", "lastname", "email@amil.com", "usernameOk", "Password._","salt",Collections.emptyList(),false, true);
+        TestRuntimeInitializer.getInstance().impersonate(userKo, runtime);
         TestEntity testEntity = new TestEntity();
         testEntity.setId(1);
         testEntity.setEntityField("field");
-        testEntity.setUserOwner(user);
         TestEntityApi testEntityApi = getTestEntityApi();
         Assertions.assertThrows(UnauthorizedException.class, () -> testEntityApi.save(testEntity));
-        TestRuntimeInitializer.getInstance().impersonate(userOk,runtime);
+        TestRuntimeInitializer.getInstance().impersonate(userOk, runtime);
         Mockito.doThrow(DuplicateEntityException.class).when(workingRepo).persist(testEntity);
         Mockito.doThrow(DuplicateEntityException.class).when(workingRepo).update(testEntity);
         Mockito.doReturn(null).when(workingRepo).find(1l);
