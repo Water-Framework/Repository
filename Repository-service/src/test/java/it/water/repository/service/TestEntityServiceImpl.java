@@ -15,11 +15,8 @@
  */
 package it.water.repository.service;
 
-import it.water.core.api.bundle.Runtime;
-import it.water.core.api.permission.SecurityContext;
 import it.water.core.api.registry.ComponentRegistry;
 import it.water.core.api.service.BaseEntitySystemApi;
-import it.water.core.api.service.OwnershipResourceService;
 import it.water.core.interceptors.annotations.FrameworkComponent;
 import it.water.core.interceptors.annotations.Inject;
 import it.water.repository.service.api.TestEntityApi;
@@ -27,7 +24,7 @@ import it.water.repository.service.api.TestEntitySystemApi;
 import it.water.repository.service.entity.TestEntity;
 
 @FrameworkComponent
-public class TestEntityServiceImpl extends BaseEntityServiceImpl<TestEntity> implements TestEntityApi, OwnershipResourceService {
+public class TestEntityServiceImpl extends BaseEntityServiceImpl<TestEntity> implements TestEntityApi {
 
     @Inject
     private TestEntitySystemApi testEntitySystemApi;
@@ -58,11 +55,6 @@ public class TestEntityServiceImpl extends BaseEntityServiceImpl<TestEntity> imp
     @Override
     protected ComponentRegistry getComponentRegistry() {
         return waterComponentRegistry;
-    }
-
-    @Override
-    public String getOwnerFieldPath() {
-        return "owner";
     }
 
 }

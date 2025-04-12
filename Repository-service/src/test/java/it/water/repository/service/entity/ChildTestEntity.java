@@ -17,34 +17,37 @@ package it.water.repository.service.entity;
 
 import it.water.core.api.entity.owned.OwnedChildResource;
 import it.water.core.api.model.BaseEntity;
+import it.water.core.api.model.EntityExtension;
+import it.water.core.api.model.ExpandableEntity;
 import it.water.core.permission.action.CrudActions;
 import it.water.core.permission.annotations.AccessControl;
 import it.water.core.permission.annotations.DefaultRoleAccess;
-import it.water.repository.service.api.ChildTestEntitySystemApi;
+import jakarta.persistence.*;
+import lombok.Data;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Transient;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Entity
+@Access(AccessType.FIELD)
 @AccessControl(availableActions = {CrudActions.SAVE, CrudActions.UPDATE, CrudActions.FIND, CrudActions.FIND_ALL, CrudActions.REMOVE},
         rolesPermissions = {
                 //Admin role can do everything
                 @DefaultRoleAccess(roleName = TestEntity.TEST_ENTITY_SAMPLE_ROLE, actions = {CrudActions.SAVE, CrudActions.UPDATE, CrudActions.FIND, CrudActions.FIND_ALL, CrudActions.REMOVE}),
         })
+@Data
 public class ChildTestEntity implements OwnedChildResource, BaseEntity {
     @Id
     private long id;
     private TestEntity parent;
     private Date entityCreateDate;
     private Date entityModifyDate;
-    private int entityVersion;
-
-    public void setParent(TestEntity parent) {
-        this.parent = parent;
-    }
+    private Integer entityVersion;
+    @Transient
+    private Map<String, Object> extraFields = new HashMap<>();
+    @Transient
+    private EntityExtension extension;
 
     @ManyToOne
     public TestEntity getParent() {
@@ -56,40 +59,4 @@ public class ChildTestEntity implements OwnedChildResource, BaseEntity {
         return parent;
     }
 
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public Date getEntityCreateDate() {
-        return entityCreateDate;
-    }
-
-    public void setEntityCreateDate(Date entityCreateDate) {
-        this.entityCreateDate = entityCreateDate;
-    }
-
-    public Date getEntityModifyDate() {
-        return entityModifyDate;
-    }
-
-    public void setEntityModifyDate(Date entityModifyDate) {
-        this.entityModifyDate = entityModifyDate;
-    }
-
-    public Integer getEntityVersion() {
-        return entityVersion;
-    }
-
-    @Override
-    public void setEntityVersion(Integer integer) {
-
-    }
-
-    public void setEntityVersion(int entityVersion) {
-        this.entityVersion = entityVersion;
-    }
 }

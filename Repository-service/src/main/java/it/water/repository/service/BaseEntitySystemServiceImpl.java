@@ -18,9 +18,7 @@
 package it.water.repository.service;
 
 import it.water.core.api.entity.events.*;
-import it.water.core.api.model.BaseEntity;
-import it.water.core.api.model.PaginableResult;
-import it.water.core.api.model.Resource;
+import it.water.core.api.model.*;
 import it.water.core.api.model.events.ApplicationEventProducer;
 import it.water.core.api.model.events.Event;
 import it.water.core.api.registry.ComponentRegistry;
@@ -88,8 +86,10 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
                 "System Service Saving entity {}: {}", this.type.getSimpleName(), entity);
         //throws runtime exception if validation is not met
         this.validate(entity);
+        this.validateEntityExtension(entity);
         try {
             produceEvent(entity, PreSaveEvent.class);
+            //Save the entity and if it has expansion proceed to invoke the save of the extension in the same transaction
             this.getRepository().persist(entity);
             produceEvent(entity, PostSaveEvent.class);
             return entity;
@@ -112,13 +112,15 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
                 "System Service Updating entity {}: {}", this.type.getSimpleName(), entity);
         //throws runtime exception if validation is not met
         this.validate(entity);
+        this.validateEntityExtension(entity);
         try {
             T entityBeforeUpdate = find(entity.getId());
             produceEvent(entity, PreUpdateEvent.class);
             produceDetailedEvent(entityBeforeUpdate, entity, PreUpdateDetailedEvent.class);
-            entity = this.getRepository().update(entity);
-            produceDetailedEvent(entityBeforeUpdate, entity, PostUpdateDetailedEvent.class);
-            return entity;
+            //updates the entity and process, eventually the expandable entity
+            T updatedEntity = this.getRepository().update(entity);
+            produceDetailedEvent(entityBeforeUpdate, updatedEntity, PostUpdateDetailedEvent.class);
+            return updatedEntity;
         } catch (DuplicateEntityException e) {
             getLog().warn("Update failed: entity is duplicated!");
             throw e;
@@ -142,6 +144,7 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
         T entity = find(id);
         if (entity != null) {
             produceEvent(entity, PreRemoveEvent.class);
+            //removes the main entity and eventually the expansion entity
             this.getRepository().remove(id);
             produceEvent(entity, PostRemoveEvent.class);
             return;
@@ -250,6 +253,18 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
         if (this.waterValidator != null) {
             this.waterValidator.validate(resource);
         }
+    }
+
+    /**
+     * Validates the expansion
+     *
+     * @param entity
+     */
+    private void validateEntityExtension(T entity) {
+        //validating eventually the entity expansion
+        EntityExtension extension = entity.isExpandableEntity()?((ExpandableEntity)entity).getExtension():null;
+        if (extension != null)
+            this.validate(extension);
     }
 
     /**

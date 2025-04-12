@@ -21,9 +21,10 @@ import it.water.core.api.permission.ProtectedEntity;
 import it.water.core.permission.action.CrudActions;
 import it.water.core.permission.annotations.AccessControl;
 import it.water.core.permission.annotations.DefaultRoleAccess;
-import it.water.repository.service.TestEntitySystemServiceImpl;
-
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -40,7 +41,9 @@ public class TestEntity implements SharedEntity, ProtectedEntity {
     @Id
     private long id;
     private String entityField;
-    private User owner;
+    @Setter
+    @Getter
+    private Long ownerUserId;
     private Set<ChildTestEntity> children = new HashSet<>();
     private Date entityCreateDate;
     private Date entityModifyDate;
@@ -54,18 +57,8 @@ public class TestEntity implements SharedEntity, ProtectedEntity {
         this.entityField = entityField;
     }
 
-    @Override
-    @Transient
-    public User getUserOwner() {
-        return owner;
-    }
 
-    @Override
-    public void setUserOwner(User user) {
-        this.owner = user;
-    }
-
-    @OneToMany(mappedBy = "parent",cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     public Set<ChildTestEntity> getChildren() {
         return children;
     }
@@ -81,14 +74,6 @@ public class TestEntity implements SharedEntity, ProtectedEntity {
 
     public void setId(long id) {
         this.id = id;
-    }
-
-    public User getOwner() {
-        return owner;
-    }
-
-    public void setOwner(User owner) {
-        this.owner = owner;
     }
 
     @Override
@@ -116,8 +101,9 @@ public class TestEntity implements SharedEntity, ProtectedEntity {
 
     @Override
     public void setEntityVersion(Integer integer) {
-
+        //just for test purpose
     }
+
     public void setEntityVersion(int entityVersion) {
         this.entityVersion = entityVersion;
     }

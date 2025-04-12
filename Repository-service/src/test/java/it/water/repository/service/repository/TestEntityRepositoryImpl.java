@@ -36,6 +36,26 @@ public class TestEntityRepositoryImpl implements TestEntityRepository {
     private static Logger logger = LoggerFactory.getLogger(TestEntityRepositoryImpl.class);
 
     @Override
+    public Class<TestEntity> getEntityType() {
+        return TestEntity.class;
+    }
+
+    @Override
+    public TestEntity persist(TestEntity testEntity, Runnable runnable) {
+        return persist(testEntity);
+    }
+
+    @Override
+    public TestEntity update(TestEntity testEntity, Runnable runnable) {
+        return update(testEntity);
+    }
+
+    @Override
+    public void remove(long l, Runnable runnable) {
+        remove(l);
+    }
+
+    @Override
     public TestEntity persist(TestEntity entity) {
         return entity;
     }

@@ -19,6 +19,7 @@ package it.water.repository.service;
 
 
 import it.water.core.api.bundle.Runtime;
+import it.water.core.api.entity.owned.OwnedResource;
 import it.water.core.api.entity.shared.SharedEntity;
 import it.water.core.api.entity.shared.SharingEntityService;
 import it.water.core.api.model.BaseEntity;
@@ -29,7 +30,6 @@ import it.water.core.api.repository.query.Query;
 import it.water.core.api.repository.query.QueryOrder;
 import it.water.core.api.service.BaseEntityApi;
 import it.water.core.api.service.BaseEntitySystemApi;
-import it.water.core.api.service.OwnershipResourceService;
 import it.water.core.interceptors.annotations.Inject;
 import it.water.core.permission.action.CrudActions;
 import it.water.core.permission.annotations.AllowGenericPermissions;
@@ -86,6 +86,11 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
     @AllowPermissions(actions = {CrudActions.SAVE})
     public T save(T entity) {
         this.log.debug("Service Saving entity {}: {}", this.type.getSimpleName(), entity);
+        //automatic setting ownership on entity
+        if (entity instanceof OwnedResource ownedResource) {
+            Long ownerUserId = (runtime != null) ? runtime.getSecurityContext().getLoggedEntityId() : 0;
+            ownedResource.setOwnerUserId(ownerUserId);
+        }
         return this.getSystemService().save(entity);
     }
 
@@ -167,17 +172,15 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
      * @return
      */
     private Query createConditionForOwnedOrSharedResource(Query initialFilter, SecurityContext securityContext) {
-        if (OwnershipResourceService.class.isAssignableFrom(this.getClass())) {
+        if (OwnedResource.class.isAssignableFrom(this.getEntityType())) {
             if (securityContext == null)
                 throw new UnauthorizedException();
             //admins can see everything
             if (!securityContext.isAdmin()) {
-                OwnershipResourceService ownedRes = (OwnershipResourceService) this;
                 Query ownedResourceFilter = null;
 
                 if (securityContext.getLoggedEntityId() != 0) {
-                    String exp = ownedRes.getOwnerFieldPath() + " = " + securityContext.getLoggedEntityId();
-                    ownedResourceFilter = getSystemService().getQueryBuilderInstance().createQueryFilter(exp);
+                    ownedResourceFilter = getSystemService().getQueryBuilderInstance().field(OwnedResource.getOwnerUserIdFieldName()).equalTo(securityContext.getLoggedEntityId());
                 } else {
                     throw new UnauthorizedException();
                 }
