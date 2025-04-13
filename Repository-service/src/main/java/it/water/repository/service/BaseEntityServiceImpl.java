@@ -21,7 +21,6 @@ package it.water.repository.service;
 import it.water.core.api.bundle.Runtime;
 import it.water.core.api.entity.owned.OwnedResource;
 import it.water.core.api.entity.shared.SharedEntity;
-import it.water.core.api.entity.shared.SharingEntityService;
 import it.water.core.api.model.BaseEntity;
 import it.water.core.api.model.PaginableResult;
 import it.water.core.api.permission.SecurityContext;
@@ -30,12 +29,14 @@ import it.water.core.api.repository.query.Query;
 import it.water.core.api.repository.query.QueryOrder;
 import it.water.core.api.service.BaseEntityApi;
 import it.water.core.api.service.BaseEntitySystemApi;
+import it.water.core.api.service.integration.SharedEntityIntegrationClient;
 import it.water.core.interceptors.annotations.Inject;
 import it.water.core.permission.action.CrudActions;
 import it.water.core.permission.annotations.AllowGenericPermissions;
 import it.water.core.permission.annotations.AllowPermissions;
 import it.water.core.permission.annotations.AllowPermissionsOnReturn;
 import it.water.core.permission.exceptions.UnauthorizedException;
+import it.water.core.registry.model.exception.NoComponentRegistryFoundException;
 import it.water.core.service.BaseAbstractService;
 import it.water.repository.entity.model.exceptions.EntityNotFound;
 import lombok.AccessLevel;
@@ -44,7 +45,7 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import java.util.Collection;
 
 
 /**
@@ -225,23 +226,31 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
     }
 
     /**
-     * Retrieve from OSGi the SharedEntitySystemApi
+     * Retrieve the SharedEntityIntegrationClient
      *
      * @return the SharedEntitySystemApi
      */
-    protected SharingEntityService getSharedEntitySystemService() {
-        return getComponentRegistry().findComponent(SharingEntityService.class, null);
+    protected SharedEntityIntegrationClient getSharedEntityIntegrationClient() {
+        try {
+            return getComponentRegistry().findComponent(SharedEntityIntegrationClient.class, null);
+        } catch (NoComponentRegistryFoundException e) {
+            getLog().warn("No shared entity integration client found!");
+            return null;
+        }
     }
 
     protected Query createFilterForOwnedOrSharedResource(Query ownedResourceFilter, long loggedEntityId) {
         if (SharedEntity.class.isAssignableFrom(this.getEntityType())) {
-            //forcing the condition that user must own the entity or is shared with him
-            List<Long> entityIds = getSharedEntitySystemService().getEntityIdsSharedWithUser(type.getName(), loggedEntityId);
-            StringBuilder sb = new StringBuilder();
-            entityIds.stream().forEach(id -> sb.append(id + ","));
-            if (!entityIds.isEmpty()) {
-                String entityIdsStr = sb.toString().substring(0, sb.toString().length() - 1);
-                ownedResourceFilter = getSystemService().getQueryBuilderInstance().createQueryFilter(ownedResourceFilter.getDefinition() + " OR id IN (" + entityIdsStr + ")");
+            SharedEntityIntegrationClient sharedEntityIntegrationClient = getSharedEntityIntegrationClient();
+            if (sharedEntityIntegrationClient != null) {
+                //forcing the condition that user must own the entity or is shared with him
+                Collection<Long> entityIds = sharedEntityIntegrationClient.fetchSharingUsersIds(type.getName(), loggedEntityId);
+                StringBuilder sb = new StringBuilder();
+                entityIds.stream().forEach(id -> sb.append(id + ","));
+                if (!entityIds.isEmpty()) {
+                    String entityIdsStr = sb.toString().substring(0, sb.toString().length() - 1);
+                    ownedResourceFilter = getSystemService().getQueryBuilderInstance().createQueryFilter(ownedResourceFilter.getDefinition() + " OR id IN (" + entityIdsStr + ")");
+                }
             }
         }
         return ownedResourceFilter;

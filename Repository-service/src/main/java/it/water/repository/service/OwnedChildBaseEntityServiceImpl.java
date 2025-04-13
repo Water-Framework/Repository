@@ -22,8 +22,10 @@ import it.water.core.api.model.BaseEntity;
 import it.water.core.api.repository.query.Query;
 import it.water.core.api.service.BaseEntityApi;
 import it.water.core.api.service.BaseEntitySystemApi;
+import it.water.core.api.service.integration.SharedEntityIntegrationClient;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collection;
 
 
 /**
@@ -35,10 +37,13 @@ public abstract class OwnedChildBaseEntityServiceImpl<T extends BaseEntity> exte
     protected final Query createFilterForOwnedOrSharedResource(Query ownedResourceFilter, long loggedUserId) {
         ownedResourceFilter = super.createFilterForOwnedOrSharedResource(ownedResourceFilter, loggedUserId);
         if (OwnedChildResource.class.isAssignableFrom(this.getEntityType())) {
-            Class<? extends OwnedResource> rootParentClass = getParentResourceClass();
-            List<Long> entityIds = getSharedEntitySystemService().getEntityIdsSharedWithUser(rootParentClass.getName(), loggedUserId);
-            if (entityIds != null && !entityIds.isEmpty()) {
-                ownedResourceFilter = ownedResourceFilter.or(getSystemService().getQueryBuilderInstance().field(this.getRootParentFieldPath()).in(entityIds));
+            SharedEntityIntegrationClient sharedEntityIntegrationClient = getSharedEntityIntegrationClient();
+            if (sharedEntityIntegrationClient != null) {
+                Class<? extends OwnedResource> rootParentClass = getParentResourceClass();
+                Collection<Long> entityIds = sharedEntityIntegrationClient.fetchSharingUsersIds(rootParentClass.getName(), loggedUserId);
+                if (entityIds != null && !entityIds.isEmpty()) {
+                    ownedResourceFilter = ownedResourceFilter.or(getSystemService().getQueryBuilderInstance().field(this.getRootParentFieldPath()).in(Arrays.asList(entityIds.toArray())));
+                }
             }
         }
         return ownedResourceFilter;
