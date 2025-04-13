@@ -21,7 +21,9 @@ import it.water.core.api.repository.query.QueryBuilder;
 import it.water.core.api.repository.query.QueryOrder;
 import it.water.repository.entity.model.PaginatedResult;
 import it.water.repository.query.DefaultQueryBuilder;
-import it.water.repository.service.api.TestEntityRepository;
+import it.water.repository.service.api.NotOwnedEntityApi;
+import it.water.repository.service.api.NotOwnedEntityRepository;
+import it.water.repository.service.entity.NotOwnedEntity;
 import it.water.repository.service.entity.TestEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,21 +34,21 @@ import java.util.Collections;
  * This class is used just to mock repository operations.
  * It is registered manually from tests
  */
-public class TestEntityRepositoryImpl implements TestEntityRepository {
-    private static Logger logger = LoggerFactory.getLogger(TestEntityRepositoryImpl.class);
+public class NotOwnedEntityRepositoryImpl implements NotOwnedEntityRepository {
+    private static Logger logger = LoggerFactory.getLogger(NotOwnedEntityRepositoryImpl.class);
 
     @Override
-    public Class<TestEntity> getEntityType() {
-        return TestEntity.class;
+    public Class<NotOwnedEntity> getEntityType() {
+        return NotOwnedEntity.class;
     }
 
     @Override
-    public TestEntity persist(TestEntity testEntity, Runnable runnable) {
+    public NotOwnedEntity persist(NotOwnedEntity testEntity, Runnable runnable) {
         return persist(testEntity);
     }
 
     @Override
-    public TestEntity update(TestEntity testEntity, Runnable runnable) {
+    public NotOwnedEntity update(NotOwnedEntity testEntity, Runnable runnable) {
         return update(testEntity);
     }
 
@@ -56,12 +58,12 @@ public class TestEntityRepositoryImpl implements TestEntityRepository {
     }
 
     @Override
-    public TestEntity persist(TestEntity entity) {
+    public NotOwnedEntity persist(NotOwnedEntity entity) {
         return entity;
     }
 
     @Override
-    public TestEntity update(TestEntity entity) {
+    public NotOwnedEntity update(NotOwnedEntity entity) {
         return entity;
     }
 
@@ -71,7 +73,7 @@ public class TestEntityRepositoryImpl implements TestEntityRepository {
     }
 
     @Override
-    public void remove(TestEntity entity) {
+    public void remove(NotOwnedEntity entity) {
         //do nothing
     }
 
@@ -81,7 +83,7 @@ public class TestEntityRepositoryImpl implements TestEntityRepository {
     }
 
     @Override
-    public void removeAll(Iterable<TestEntity> entities) {
+    public void removeAll(Iterable<NotOwnedEntity> entities) {
         //do nothing
     }
 
@@ -91,38 +93,38 @@ public class TestEntityRepositoryImpl implements TestEntityRepository {
     }
 
     @Override
-    public TestEntity find(long id) {
+    public NotOwnedEntity find(long id) {
         if(id < 0)
             return null;
-        TestEntity te = new TestEntity();
+        NotOwnedEntity te = new NotOwnedEntity();
         te.setId(id);
         return te;
     }
 
     @Override
-    public TestEntity find(Query filter) {
-        TestEntity te = new TestEntity();
+    public NotOwnedEntity find(Query filter) {
+        NotOwnedEntity te = new NotOwnedEntity();
         te.setId(1);
         return te;
     }
 
     @Override
-    public TestEntity find(String filterStr) {
-        TestEntity te = new TestEntity();
+    public NotOwnedEntity find(String filterStr) {
+        NotOwnedEntity te = new NotOwnedEntity();
         te.setId(1);
         return te;
     }
 
     @Override
-    public long countAll(it.water.core.api.repository.query.Query filter) {
+    public long countAll(Query filter) {
         return 1;
     }
 
     @Override
-    public PaginableResult<TestEntity> findAll(int delta, int page, it.water.core.api.repository.query.Query filter, QueryOrder queryOrder) {
-        TestEntity te = new TestEntity();
+    public PaginableResult<NotOwnedEntity> findAll(int delta, int page, Query filter, QueryOrder queryOrder) {
+        NotOwnedEntity te = new NotOwnedEntity();
         te.setId(1);
-        PaginatedResult<TestEntity> paginatedResult = new PaginatedResult<>(1, 1, 1, 1, Collections.singleton(te));
+        PaginatedResult<NotOwnedEntity> paginatedResult = new PaginatedResult<>(1, 1, 1, 1, Collections.singleton(te));
         return paginatedResult;
     }
 

@@ -59,4 +59,13 @@ public class ChildTestEntity implements OwnedChildResource, BaseEntity {
         return parent;
     }
 
+    @Override
+    public Long getOwnerUserId() {
+        return getParent().getOwnerUserId();
+    }
+
+    @Override
+    public void setOwnerUserId(Long aLong) {
+        //do nothing
+    }
 }

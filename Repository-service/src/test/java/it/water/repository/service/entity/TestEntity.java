@@ -16,6 +16,8 @@
 package it.water.repository.service.entity;
 
 import it.water.core.api.entity.shared.SharedEntity;
+import it.water.core.api.model.EntityExtension;
+import it.water.core.api.model.ExpandableEntity;
 import it.water.core.api.model.User;
 import it.water.core.api.permission.ProtectedEntity;
 import it.water.core.permission.action.CrudActions;
@@ -27,6 +29,7 @@ import lombok.Setter;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @Entity
@@ -36,7 +39,7 @@ import java.util.Set;
                 //Admin role can do everything
                 @DefaultRoleAccess(roleName = TestEntity.TEST_ENTITY_SAMPLE_ROLE, actions = {CrudActions.SAVE, CrudActions.UPDATE, CrudActions.FIND, CrudActions.FIND_ALL, CrudActions.REMOVE}),
         })
-public class TestEntity implements SharedEntity, ProtectedEntity {
+public class TestEntity implements SharedEntity, ProtectedEntity, ExpandableEntity {
     public static final String TEST_ENTITY_SAMPLE_ROLE = "TEST_ENTITY_SAMPLE_ROLE";
     @Id
     private long id;
@@ -48,6 +51,7 @@ public class TestEntity implements SharedEntity, ProtectedEntity {
     private Date entityCreateDate;
     private Date entityModifyDate;
     private int entityVersion;
+    private EntityExtension entityExtension;
 
     public String getEntityField() {
         return entityField;
@@ -103,8 +107,27 @@ public class TestEntity implements SharedEntity, ProtectedEntity {
     public void setEntityVersion(Integer integer) {
         //just for test purpose
     }
-
     public void setEntityVersion(int entityVersion) {
         this.entityVersion = entityVersion;
+    }
+
+    @Override
+    public Map<String, Object> getExtraFields() {
+        return Map.of();
+    }
+
+    @Override
+    public void setExtraFields(Map<String, Object> map) {
+
+    }
+
+    @Override
+    public EntityExtension getExtension() {
+        return this.entityExtension;
+    }
+
+    @Override
+    public void setExtension(EntityExtension entityExtension) {
+        this.entityExtension = entityExtension;
     }
 }
