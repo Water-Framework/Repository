@@ -67,8 +67,8 @@ public class QueryParser {
         Query result = null;
         //enable @ as word char
         tokenizer.wordChars('@','@');
-        //enable / as ordinary char
-        tokenizer.ordinaryChar('/');
+        //enable / as word char
+        tokenizer.wordChars('/','/');
         tokenizer.slashSlashComments(false);
         tokenizer.slashStarComments(false);
         tokenizer.nextToken();
