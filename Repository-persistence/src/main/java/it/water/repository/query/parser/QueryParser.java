@@ -61,16 +61,25 @@ public class QueryParser {
 
     public QueryParser(String filter) {
         this.tokenizer = new StreamTokenizer(new StringReader(filter));
-    }
-
-    public Query parse() throws InstantiationException, IllegalAccessException, IOException, InvocationTargetException, NoSuchMethodException {
-        Query result = null;
+        tokenizer.resetSyntax();
+        tokenizer.wordChars('a', 'z');
+        tokenizer.wordChars('A', 'Z');
+        tokenizer.wordChars(128 + 32, 255);
+        tokenizer.whitespaceChars(0, ' ');
+        tokenizer.quoteChar('"');
+        tokenizer.quoteChar('\'');
         //enable @ as word char
         tokenizer.wordChars('@','@');
         //enable / as word char
         tokenizer.wordChars('/','/');
+        tokenizer.wordChars('0','9');
+        tokenizer.wordChars('.','.');
         tokenizer.slashSlashComments(false);
         tokenizer.slashStarComments(false);
+    }
+
+    public Query parse() throws InstantiationException, IllegalAccessException, IOException, InvocationTargetException, NoSuchMethodException {
+        Query result = null;
         tokenizer.nextToken();
         while (tokenizer.ttype != StreamTokenizer.TT_EOF) {
             result = this.parseExpression(result);
@@ -93,7 +102,7 @@ public class QueryParser {
                 // returning directly in order to continue parsing
                 return result;
         } else if (tokenizer.ttype == StreamTokenizer.TT_NUMBER) {
-            result = new FieldValueOperand(tokenizer.nval);
+            result = new FieldValueOperand(String.valueOf(tokenizer.nval));
         } else if (tokenizer.ttype != -4 /* TT_NOTHING */) {
             throw new IllegalArgumentException("Unrecognized token: " + tokenizer.ttype + "/" + tokenizer.sval);
         }
