@@ -74,6 +74,7 @@ public class QueryParser {
         tokenizer.wordChars('/','/');
         tokenizer.wordChars('0','9');
         tokenizer.wordChars('.','.');
+        tokenizer.wordChars('-','-');
         tokenizer.slashSlashComments(false);
         tokenizer.slashStarComments(false);
     }

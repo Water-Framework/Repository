@@ -120,7 +120,7 @@ class WaterRepositoryServiceTest implements Service {
         Assertions.assertEquals(1L, getTestEntityApi().find(workingRepo.getQueryBuilderInstance().field("entityField").equalTo("field1")).getId());
         Assertions.assertEquals(1L, getTestEntityApi().countAll(null));
         Assertions.assertDoesNotThrow(() -> getTestEntityApi().remove(1));
-        Assertions.assertThrows(UnauthorizedException.class,() -> getTestEntityApi().remove(-1));
+        Assertions.assertThrows(EntityNotFound.class,() -> getTestEntityApi().remove(-1));
         Assertions.assertEquals(1, getTestEntityApi().findAll(workingRepo.getQueryBuilderInstance().field("entityField").equalTo("field1"), 1, 1, null).getResults().size());
         TestRuntimeInitializer.getInstance().impersonate(readUser, runtime);
         //Bypassing permission and checking only impersonate
@@ -190,7 +190,7 @@ class WaterRepositoryServiceTest implements Service {
         Assertions.assertEquals(1L, getNotOwnedEntityApi().find(notOwnedEntityRepository.getQueryBuilderInstance().field("entityField").equalTo("field1")).getId());
         Assertions.assertEquals(1L, getNotOwnedEntityApi().countAll(null));
         Assertions.assertDoesNotThrow(() -> getNotOwnedEntityApi().remove(1));
-        Assertions.assertThrows(UnauthorizedException.class,() -> getNotOwnedEntityApi().remove(-1));
+        Assertions.assertThrows(EntityNotFound.class,() -> getNotOwnedEntityApi().remove(-1));
         Assertions.assertEquals(1, getNotOwnedEntityApi().findAll(notOwnedEntityRepository.getQueryBuilderInstance().field("entityField").equalTo("field1"), 1, 1, null).getResults().size());
         TestRuntimeInitializer.getInstance().impersonate(readUser, runtime);
         //Bypassing permission and checking only impersonate
