@@ -16,23 +16,22 @@
 
 package it.water.repository.service;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import it.water.core.api.entity.owned.OwnedChildResource;
 import it.water.core.api.entity.owned.OwnedResource;
 import it.water.core.api.model.BaseEntity;
 import it.water.core.api.repository.query.Query;
-import it.water.core.api.service.BaseEntityApi;
 import it.water.core.api.service.BaseEntitySystemApi;
 import it.water.core.api.service.integration.SharedEntityIntegrationClient;
-
-import java.util.Arrays;
-import java.util.Collection;
 
 
 /**
  * @param <T> params indicate a generic water base entity class
  * @Author Aristide Cittadino.
  */
-public abstract class OwnedChildBaseEntityServiceImpl<T extends BaseEntity> extends BaseEntityServiceImpl<T> implements BaseEntityApi<T> {
+public abstract class OwnedChildBaseEntityServiceImpl<T extends BaseEntity> extends BaseEntityServiceImpl<T> {
     @Override
     protected final Query createFilterForOwnedOrSharedResource(Query ownedResourceFilter, long loggedUserId) {
         ownedResourceFilter = super.createFilterForOwnedOrSharedResource(ownedResourceFilter, loggedUserId);

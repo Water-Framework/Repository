@@ -16,21 +16,18 @@
 
 package it.water.repository.service.entity;
 
-import it.water.core.api.model.BaseEntity;
-import it.water.core.api.model.Resource;
 import it.water.core.validation.annotations.NotNullOnPersist;
 import it.water.repository.entity.model.AbstractEntity;
-import lombok.Getter;
-import lombok.Setter;
-
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import lombok.Getter;
+import lombok.Setter;
 
 @Access(AccessType.FIELD)
 @Entity
-public class TestValidationEntity extends AbstractEntity implements BaseEntity {
+public class TestValidationEntity extends AbstractEntity {
 
     @Id
     private long id;
@@ -40,6 +37,7 @@ public class TestValidationEntity extends AbstractEntity implements BaseEntity {
     @NotNullOnPersist
     private String entityField;
 
+    @Override
     public long getId() {
         return id;
     }

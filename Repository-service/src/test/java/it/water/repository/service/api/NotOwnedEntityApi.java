@@ -17,7 +17,6 @@ package it.water.repository.service.api;
 
 import it.water.core.api.service.BaseEntityApi;
 import it.water.repository.service.entity.NotOwnedEntity;
-import it.water.repository.service.entity.TestEntity;
 
 public interface NotOwnedEntityApi extends BaseEntityApi<NotOwnedEntity> {
 }

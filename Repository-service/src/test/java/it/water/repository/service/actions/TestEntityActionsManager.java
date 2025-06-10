@@ -28,6 +28,7 @@ import java.util.Map;
 
 @FrameworkComponent(services = TestEntityActionManager.class)
 public class TestEntityActionsManager extends DefaultActionsManager implements TestEntityActionManager {
+    @SuppressWarnings("unchecked")
     @Override
     public Map<String, ActionList<? extends Resource>> getActions() {
         Map<String, ActionList<? extends Resource>> actions = new HashMap<>();

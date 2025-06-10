@@ -19,6 +19,7 @@ package it.water.repository.entity.model;
 import it.water.core.api.model.BaseEntity;
 import it.water.core.model.AbstractResource;
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,6 +31,7 @@ import java.util.Date;
  * @Author Aristide Cittadino.
  * This class is a basic implementation of WaterBaseEntity methods.
  */
+@EqualsAndHashCode(of = "id",callSuper = false)
 public abstract class AbstractEntity extends AbstractResource implements BaseEntity {
 
     /**

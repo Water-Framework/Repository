@@ -52,6 +52,7 @@ public class ChildTestEntityServiceImpl extends OwnedChildBaseEntityServiceImpl<
         return "parent";
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     protected BaseEntitySystemApi<ChildTestEntity> getSystemService() {
         return (BaseEntitySystemApi) getChildTestEntitySystemApi();

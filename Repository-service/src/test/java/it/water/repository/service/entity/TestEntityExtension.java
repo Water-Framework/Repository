@@ -15,22 +15,13 @@
  */
 package it.water.repository.service.entity;
 
-import it.water.core.api.entity.shared.SharedEntity;
+import java.util.Date;
+
 import it.water.core.api.model.BaseEntity;
 import it.water.core.api.model.EntityExtension;
-import it.water.core.api.model.ExpandableEntity;
 import it.water.core.api.permission.ProtectedEntity;
-import it.water.core.permission.action.CrudActions;
-import it.water.core.permission.annotations.AccessControl;
-import it.water.core.permission.annotations.DefaultRoleAccess;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 @Entity
 public class TestEntityExtension implements ProtectedEntity, EntityExtension {
@@ -50,7 +41,7 @@ public class TestEntityExtension implements ProtectedEntity, EntityExtension {
 
     @Override
     public void setupExtensionFields(long l, BaseEntity baseEntity) {
-
+        // do nothing
     }
 
     @Override
@@ -60,7 +51,7 @@ public class TestEntityExtension implements ProtectedEntity, EntityExtension {
 
     @Override
     public void setRelatedEntityId(long l) {
-
+        //do nothing
     }
 
     @Override
@@ -85,6 +76,6 @@ public class TestEntityExtension implements ProtectedEntity, EntityExtension {
 
     @Override
     public void setEntityVersion(Integer integer) {
-
+        //do nothing
     }
 }

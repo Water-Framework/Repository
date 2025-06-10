@@ -33,6 +33,7 @@ import java.util.Collections;
  * It is registered manually from tests
  */
 public class ChildTestEntityRepositoryImpl implements ChildTestEntityRepository {
+    @SuppressWarnings("unused")
     private static Logger logger = LoggerFactory.getLogger(ChildTestEntityRepositoryImpl.class);
 
     @Override
@@ -120,8 +121,7 @@ public class ChildTestEntityRepositoryImpl implements ChildTestEntityRepository 
     public PaginableResult<ChildTestEntity> findAll(int delta, int page, Query filter, QueryOrder queryOrder) {
         ChildTestEntity te = new ChildTestEntity();
         te.setId(1);
-        PaginatedResult<ChildTestEntity> paginatedResult = new PaginatedResult<>(1, 1, 1, 1, Collections.singleton(te));
-        return paginatedResult;
+        return new PaginatedResult<>(1, 1, 1, 1, Collections.singleton(te));
     }
 
 

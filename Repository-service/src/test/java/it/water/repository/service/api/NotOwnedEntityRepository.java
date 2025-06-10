@@ -17,7 +17,6 @@ package it.water.repository.service.api;
 
 import it.water.core.api.repository.BaseRepository;
 import it.water.repository.service.entity.NotOwnedEntity;
-import it.water.repository.service.entity.TestEntity;
 
 public interface NotOwnedEntityRepository extends BaseRepository<NotOwnedEntity> {
     void remove(NotOwnedEntity entity);

@@ -17,15 +17,11 @@ package it.water.repository.service;
 
 import it.water.core.api.registry.ComponentRegistry;
 import it.water.core.api.service.BaseEntitySystemApi;
-import it.water.core.api.service.integration.SharedEntityIntegrationClient;
 import it.water.core.interceptors.annotations.FrameworkComponent;
 import it.water.core.interceptors.annotations.Inject;
 import it.water.repository.service.api.NotOwnedEntityApi;
 import it.water.repository.service.api.NotOwnedEntitySystemApi;
-import it.water.repository.service.api.TestEntityApi;
-import it.water.repository.service.api.TestEntitySystemApi;
 import it.water.repository.service.entity.NotOwnedEntity;
-import it.water.repository.service.entity.TestEntity;
 
 @FrameworkComponent
 public class NotOwnedEntityServiceImpl extends BaseEntityServiceImpl<NotOwnedEntity> implements NotOwnedEntityApi {

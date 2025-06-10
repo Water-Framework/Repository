@@ -33,6 +33,7 @@ import java.util.Collections;
  * It is registered manually from tests
  */
 public class TestEntityRepositoryImpl implements TestEntityRepository {
+    @SuppressWarnings("unused")
     private static Logger logger = LoggerFactory.getLogger(TestEntityRepositoryImpl.class);
 
     @Override
@@ -122,8 +123,7 @@ public class TestEntityRepositoryImpl implements TestEntityRepository {
     public PaginableResult<TestEntity> findAll(int delta, int page, it.water.core.api.repository.query.Query filter, QueryOrder queryOrder) {
         TestEntity te = new TestEntity();
         te.setId(1);
-        PaginatedResult<TestEntity> paginatedResult = new PaginatedResult<>(1, 1, 1, 1, Collections.singleton(te));
-        return paginatedResult;
+        return new PaginatedResult<>(1, 1, 1, 1, Collections.singleton(te));
     }
 
     @Override

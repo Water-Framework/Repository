@@ -15,22 +15,26 @@
  */
 package it.water.repository.service.entity;
 
-import it.water.core.api.entity.shared.SharedEntity;
-import it.water.core.api.model.EntityExtension;
-import it.water.core.api.model.ExpandableEntity;
-import it.water.core.api.model.User;
-import it.water.core.api.permission.ProtectedEntity;
-import it.water.core.permission.action.CrudActions;
-import it.water.core.permission.annotations.AccessControl;
-import it.water.core.permission.annotations.DefaultRoleAccess;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import it.water.core.api.entity.shared.SharedEntity;
+import it.water.core.api.model.EntityExtension;
+import it.water.core.api.model.ExpandableEntity;
+import it.water.core.api.permission.ProtectedEntity;
+import it.water.core.permission.action.CrudActions;
+import it.water.core.permission.annotations.AccessControl;
+import it.water.core.permission.annotations.DefaultRoleAccess;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(uniqueConstraints = {@UniqueConstraint(columnNames = "uniqueField"), @UniqueConstraint(columnNames = {"combinedUniqueField1", "combinedUniqueField2"})})
@@ -118,7 +122,7 @@ public class TestEntity implements SharedEntity, ProtectedEntity, ExpandableEnti
 
     @Override
     public void setExtraFields(Map<String, Object> map) {
-
+        // do nothing
     }
 
     @Override

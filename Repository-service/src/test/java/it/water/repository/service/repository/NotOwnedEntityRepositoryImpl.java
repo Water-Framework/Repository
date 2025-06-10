@@ -15,26 +15,26 @@
  */
 package it.water.repository.service.repository;
 
+import java.util.Collections;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import it.water.core.api.model.PaginableResult;
 import it.water.core.api.repository.query.Query;
 import it.water.core.api.repository.query.QueryBuilder;
 import it.water.core.api.repository.query.QueryOrder;
 import it.water.repository.entity.model.PaginatedResult;
 import it.water.repository.query.DefaultQueryBuilder;
-import it.water.repository.service.api.NotOwnedEntityApi;
 import it.water.repository.service.api.NotOwnedEntityRepository;
 import it.water.repository.service.entity.NotOwnedEntity;
-import it.water.repository.service.entity.TestEntity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
 
 /**
  * This class is used just to mock repository operations.
  * It is registered manually from tests
  */
 public class NotOwnedEntityRepositoryImpl implements NotOwnedEntityRepository {
+    @SuppressWarnings("unused")
     private static Logger logger = LoggerFactory.getLogger(NotOwnedEntityRepositoryImpl.class);
 
     @Override
@@ -124,8 +124,7 @@ public class NotOwnedEntityRepositoryImpl implements NotOwnedEntityRepository {
     public PaginableResult<NotOwnedEntity> findAll(int delta, int page, Query filter, QueryOrder queryOrder) {
         NotOwnedEntity te = new NotOwnedEntity();
         te.setId(1);
-        PaginatedResult<NotOwnedEntity> paginatedResult = new PaginatedResult<>(1, 1, 1, 1, Collections.singleton(te));
-        return paginatedResult;
+        return new PaginatedResult<>(1, 1, 1, 1, Collections.singleton(te));
     }
 
     @Override

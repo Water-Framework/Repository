@@ -15,6 +15,15 @@
  */
 package it.water.repository.service;
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import it.water.core.api.bundle.ApplicationProperties;
 import it.water.core.api.bundle.Runtime;
 import it.water.core.api.model.User;
@@ -22,7 +31,6 @@ import it.water.core.api.repository.query.Query;
 import it.water.core.api.repository.query.QueryOrder;
 import it.water.core.api.role.RoleManager;
 import it.water.core.api.service.Service;
-import it.water.core.api.service.integration.SharedEntityIntegrationClient;
 import it.water.core.api.user.UserManager;
 import it.water.core.interceptors.annotations.Inject;
 import it.water.core.model.exceptions.ValidationException;
@@ -33,16 +41,24 @@ import it.water.core.testing.utils.bundle.TestRuntimeInitializer;
 import it.water.core.testing.utils.junit.WaterTestExtension;
 import it.water.repository.entity.model.exceptions.DuplicateEntityException;
 import it.water.repository.entity.model.exceptions.EntityNotFound;
-import it.water.repository.service.api.*;
-import it.water.repository.service.entity.*;
+import it.water.repository.service.api.ChildTestEntityApi;
+import it.water.repository.service.api.ChildTestEntityRepository;
+import it.water.repository.service.api.NotOwnedEntityApi;
+import it.water.repository.service.api.NotOwnedEntityRepository;
+import it.water.repository.service.api.TestEntityActionManager;
+import it.water.repository.service.api.TestEntityApi;
+import it.water.repository.service.api.TestEntityRepository;
+import it.water.repository.service.api.TestEntitySystemApi;
+import it.water.repository.service.api.TestValidationEntitySystemApi;
+import it.water.repository.service.entity.ChildTestEntity;
+import it.water.repository.service.entity.NotOwnedEntity;
+import it.water.repository.service.entity.TestEntity;
+import it.water.repository.service.entity.TestEntityExtension;
+import it.water.repository.service.entity.TestValidationEntity;
 import it.water.repository.service.repository.ChildTestEntityRepositoryImpl;
 import it.water.repository.service.repository.NotOwnedEntityRepositoryImpl;
 import it.water.repository.service.repository.TestEntityRepositoryImpl;
 import lombok.Setter;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith({MockitoExtension.class, WaterTestExtension.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

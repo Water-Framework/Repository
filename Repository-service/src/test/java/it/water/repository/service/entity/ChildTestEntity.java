@@ -15,19 +15,23 @@
  */
 package it.water.repository.service.entity;
 
-import it.water.core.api.entity.owned.OwnedChildResource;
-import it.water.core.api.model.BaseEntity;
-import it.water.core.api.model.EntityExtension;
-import it.water.core.api.model.ExpandableEntity;
-import it.water.core.permission.action.CrudActions;
-import it.water.core.permission.annotations.AccessControl;
-import it.water.core.permission.annotations.DefaultRoleAccess;
-import jakarta.persistence.*;
-import lombok.Data;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import it.water.core.api.entity.owned.OwnedChildResource;
+import it.water.core.api.model.BaseEntity;
+import it.water.core.api.model.EntityExtension;
+import it.water.core.permission.action.CrudActions;
+import it.water.core.permission.annotations.AccessControl;
+import it.water.core.permission.annotations.DefaultRoleAccess;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import lombok.Data;
 
 @Entity
 @Access(AccessType.FIELD)
@@ -37,7 +41,7 @@ import java.util.Map;
                 @DefaultRoleAccess(roleName = TestEntity.TEST_ENTITY_SAMPLE_ROLE, actions = {CrudActions.SAVE, CrudActions.UPDATE, CrudActions.FIND, CrudActions.FIND_ALL, CrudActions.REMOVE}),
         })
 @Data
-public class ChildTestEntity implements OwnedChildResource, BaseEntity {
+public class ChildTestEntity implements OwnedChildResource {
     @Id
     private long id;
     private TestEntity parent;

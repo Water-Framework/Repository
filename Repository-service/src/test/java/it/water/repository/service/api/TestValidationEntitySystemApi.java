@@ -17,7 +17,6 @@ package it.water.repository.service.api;
 
 import it.water.core.api.model.Resource;
 import it.water.core.api.service.BaseEntitySystemApi;
-import it.water.repository.service.entity.TestEntity;
 import it.water.repository.service.entity.TestValidationEntity;
 
 public interface TestValidationEntitySystemApi extends BaseEntitySystemApi<TestValidationEntity> {
