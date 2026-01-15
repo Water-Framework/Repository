@@ -21,6 +21,7 @@ import it.water.core.api.repository.query.Query;
 import it.water.core.api.repository.query.QueryFilterOperation;
 import it.water.core.api.repository.query.QueryFilterOperator;
 import it.water.core.api.repository.query.operands.FieldNameOperand;
+import it.water.core.api.repository.query.operands.FieldValueListOperand;
 import it.water.core.api.repository.query.operands.FieldValueOperand;
 import it.water.core.api.repository.query.operands.ParenthesisNode;
 import it.water.core.api.repository.query.operations.*;
@@ -51,6 +52,7 @@ public class QueryParser {
         availableOperations.add(new EqualTo());
         availableOperations.add(new GreaterOrEqualThan());
         availableOperations.add(new GreaterThan());
+        availableOperations.add(new In());
         availableOperations.add(new Like());
         availableOperations.add(new LowerOrEqualThan());
         availableOperations.add(new LowerThan());
@@ -91,7 +93,7 @@ public class QueryParser {
     private Query parsePrimary(boolean parseField) throws IOException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         Query result = null;
         if (tokenizer.ttype == '(') {
-            result = parseParenthesisNode();
+            result = parseParenthesisNode(parseField);
         } else if (tokenizer.ttype == '"' || tokenizer.ttype == '\'' || tokenizer.ttype == StreamTokenizer.TT_WORD) {
             result = checkParseOperator(tokenizer.sval);
             if (result == null) {
@@ -111,11 +113,14 @@ public class QueryParser {
         return result;
     }
 
-    private Query parseParenthesisNode() throws IOException, InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
+    private Query parseParenthesisNode(boolean parseField) throws IOException, InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
         Query innerFilter = null;
         tokenizer.nextToken();
         while (tokenizer.ttype != ')' && tokenizer.ttype != StreamTokenizer.TT_EOF) {
-            innerFilter = parseExpression(innerFilter);
+            if(!parseField)
+                innerFilter = parseValueList();
+            else
+                innerFilter = parseExpression(innerFilter);
         }
         if (tokenizer.ttype != ')') {
             throw new IllegalAccessException(") expected, got " + tokenizer.ttype + "/" + tokenizer.sval);
@@ -123,6 +128,36 @@ public class QueryParser {
         Query parenthesisNode = new ParenthesisNode();
         parenthesisNode.defineOperands(innerFilter);
         return parenthesisNode;
+    }
+
+    private Query parseValueList() throws IOException {
+        List<Object> values = new ArrayList<>();
+
+        while (tokenizer.ttype != ')' && tokenizer.ttype != StreamTokenizer.TT_EOF) {
+            // Skip comma separator
+            if (tokenizer.ttype == ',') {
+                tokenizer.nextToken();
+                continue;
+            }
+
+            // Parse the value based on token type
+            Object value = null;
+            if (tokenizer.ttype == '"' || tokenizer.ttype == '\'') {
+                value = tokenizer.sval;
+            } else if (tokenizer.ttype == StreamTokenizer.TT_WORD) {
+                value = tokenizer.sval;
+            } else if (tokenizer.ttype == StreamTokenizer.TT_NUMBER) {
+                value = tokenizer.nval;
+            }
+
+            if (value != null) {
+                values.add(value);
+            }
+
+            tokenizer.nextToken();
+        }
+
+        return new FieldValueListOperand(values);
     }
 
     private Query parseExpression(Query left) throws IOException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {

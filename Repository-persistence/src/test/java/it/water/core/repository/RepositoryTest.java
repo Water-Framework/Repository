@@ -17,6 +17,7 @@ package it.water.core.repository;
 
 import it.water.core.api.repository.query.Query;
 import it.water.core.api.repository.query.operands.FieldNameOperand;
+import it.water.core.api.repository.query.operands.FieldValueListOperand;
 import it.water.core.api.repository.query.operands.FieldValueOperand;
 import it.water.core.api.repository.query.operations.*;
 import it.water.repository.query.DefaultQueryBuilder;
@@ -24,6 +25,9 @@ import it.water.repository.query.order.DefaultQueryOrder;
 import it.water.repository.query.order.DefaultQueryOrderParameter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 class RepositoryTest {
 
@@ -96,7 +100,7 @@ class RepositoryTest {
         Assertions.assertEquals("uniqueField LIKE a", likeOperation.getDefinition());
 
         In inOperation = new In();
-        inOperation.defineOperands(defaultQueryBuilder.field("uniqueField"), new FieldValueOperand("a"), new FieldValueOperand("b"));
+        inOperation.defineOperands(defaultQueryBuilder.field("uniqueField"), new FieldValueListOperand(List.of("a", "b")));
         Assertions.assertEquals("uniqueField IN (a,b)", inOperation.getDefinition());
 
     }
@@ -107,9 +111,12 @@ class RepositoryTest {
         Query q = defaultQueryBuilder.createQueryFilter("a LIKE pippo AND age < 50");
         Query q2 = defaultQueryBuilder.createQueryFilter("a LIKE pippo AND (age < 50 OR name = mario)");
         Query q3 = defaultQueryBuilder.createQueryFilter("a LIKE pippo AND (age < 50 OR name = mario");
+        Query q4 = defaultQueryBuilder.createQueryFilter("ownerUserId = 52 OR id IN (452,454)");
+        Assertions.assertEquals("ownerUserId = 52 OR id IN (452,454)", q4.getDefinition());
         Assertions.assertNotNull(q);
         Assertions.assertNotNull(q2);
         Assertions.assertNull(q3);
+        Assertions.assertNotNull(q4);
     }
 
 }
