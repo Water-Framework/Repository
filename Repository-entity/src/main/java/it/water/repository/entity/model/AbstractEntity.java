@@ -61,6 +61,21 @@ public abstract class AbstractEntity extends AbstractResource implements BaseEnt
     @Getter
     @Setter(AccessLevel.PROTECTED)
     protected Date entityModifyDate;
+
+    /**
+     * category ids for asset management
+     */
+    @Getter
+    @Setter
+    protected long[] categoryIds;
+
+    /**
+     * tag ids for asset management
+     */
+    @Getter
+    @Setter
+    protected long[] tagIds;
+
     protected AbstractEntity() {
         initEntity(0, new Date(Instant.now().toEpochMilli()));
     }
