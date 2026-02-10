@@ -17,6 +17,8 @@
 
 package it.water.repository.service;
 
+import it.water.core.api.service.integration.AssetCategoryIntegrationClient;
+import it.water.core.api.service.integration.AssetTagIntegrationClient;
 import it.water.core.api.entity.events.*;
 import it.water.core.api.model.*;
 import it.water.core.api.model.events.ApplicationEventProducer;
@@ -65,6 +67,14 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
     @Setter
     protected WaterValidator waterValidator;
 
+    @Inject
+    @Setter
+    private AssetCategoryIntegrationClient assetCategoryIntegrationClient;
+
+    @Inject
+    @Setter
+    private AssetTagIntegrationClient assetTagIntegrationClient;
+
     /**
      * Constructor for WaterBaseEntitySystemServiceImpl
      *
@@ -91,6 +101,7 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
             produceEvent(entity, PreSaveEvent.class);
             //Save the entity and if it has expansion proceed to invoke the save of the extension in the same transaction
             this.getRepository().persist(entity);
+            manageAssets(entity, AssetOperation.ADD);
             produceEvent(entity, PostSaveEvent.class);
             return entity;
         } catch (DuplicateEntityException e) {
@@ -119,6 +130,7 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
             produceDetailedEvent(entityBeforeUpdate, entity, PreUpdateDetailedEvent.class);
             //updates the entity and process, eventually the expandable entity
             T updatedEntity = this.getRepository().update(entity);
+            manageAssets(entity, AssetOperation.UPDATE);
             produceDetailedEvent(entityBeforeUpdate, updatedEntity, PostUpdateDetailedEvent.class);
             return updatedEntity;
         } catch (DuplicateEntityException e) {
@@ -146,6 +158,7 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
             produceEvent(entity, PreRemoveEvent.class);
             //removes the main entity and eventually the expansion entity
             this.getRepository().remove(id);
+            manageAssets(entity, AssetOperation.DELETE);
             produceEvent(entity, PostRemoveEvent.class);
             return;
         }
@@ -185,6 +198,75 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
         return this.getRepository().findAll(delta, page, filter, queryOrder);
     }
 
+    /**
+     *
+     * @param entity
+     * @param operation
+     */
+    private void manageAssets(T entity, AssetOperation operation) {
+        manageAssetCategories(entity, operation);
+        manageAssetTags(entity, operation);
+    }
+
+    /**
+     *
+     * @param entity
+     * @param op
+     */
+    private void manageAssetCategories(T entity, AssetOperation op) {
+        if (assetCategoryIntegrationClient == null) return;
+
+        String resourceName = entity.getClass().getName();
+        long resourceId = entity.getId();
+
+        switch (op) {
+            case ADD:
+                if (entity.getCategoryIds() != null)
+                    assetCategoryIntegrationClient.addAssetCategories(resourceName, resourceId,
+                            entity.getCategoryIds());
+                break;
+            case UPDATE:
+                long[] oldIds = assetCategoryIntegrationClient.findAssetCategories(resourceName, resourceId);
+                assetCategoryIntegrationClient.removeAssetCategories(resourceName, resourceId, oldIds);
+                if (entity.getCategoryIds() != null)
+                    assetCategoryIntegrationClient.addAssetCategories(resourceName, resourceId,
+                            entity.getCategoryIds());
+                break;
+            case DELETE:
+                long[] ids = assetCategoryIntegrationClient.findAssetCategories(resourceName, resourceId);
+                assetCategoryIntegrationClient.removeAssetCategories(resourceName, resourceId, ids);
+        }
+    }
+
+    /**
+     * Manage asset tags for an entity
+     * @param entity the entity
+     * @param op the operation (ADD, UPDATE, DELETE)
+     */
+    private void manageAssetTags(T entity, AssetOperation op) {
+        if (assetTagIntegrationClient == null) return;
+
+        String resourceName = entity.getClass().getName();
+        long resourceId = entity.getId();
+
+        switch (op) {
+            case ADD:
+                if (entity.getTagIds() != null)
+                    assetTagIntegrationClient.addAssetTags(resourceName, resourceId,
+                            entity.getTagIds());
+                break;
+            case UPDATE:
+                long[] oldIds = assetTagIntegrationClient.findAssetTags(resourceName, resourceId);
+                assetTagIntegrationClient.removeAssetTags(resourceName, resourceId, oldIds);
+                if (entity.getTagIds() != null)
+                    assetTagIntegrationClient.addAssetTags(resourceName, resourceId,
+                            entity.getTagIds());
+                break;
+            case DELETE:
+                long[] ids = assetTagIntegrationClient.findAssetTags(resourceName, resourceId);
+                assetTagIntegrationClient.removeAssetTags(resourceName, resourceId, ids);
+        }
+    }
 
     /**
      * Return current entity type
@@ -272,4 +354,8 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
      */
     protected abstract BaseRepository<T> getRepository();
 
+
+    protected enum AssetOperation {
+        ADD, DELETE, UPDATE;
+    }
 }
