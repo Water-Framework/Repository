@@ -16,7 +16,9 @@
 
 package it.water.repository.entity.model;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import it.water.core.api.model.BaseEntity;
+import it.water.core.api.service.rest.WaterJsonView;
 import it.water.core.model.AbstractResource;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -67,6 +69,7 @@ public abstract class AbstractEntity extends AbstractResource implements BaseEnt
      */
     @Getter
     @Setter
+    @JsonView(WaterJsonView.Extended.class)
     protected long[] categoryIds;
 
     /**
@@ -74,6 +77,7 @@ public abstract class AbstractEntity extends AbstractResource implements BaseEnt
      */
     @Getter
     @Setter
+    @JsonView(WaterJsonView.Extended.class)
     protected long[] tagIds;
 
     protected AbstractEntity() {
