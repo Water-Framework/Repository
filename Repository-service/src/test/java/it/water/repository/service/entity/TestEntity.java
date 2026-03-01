@@ -65,7 +65,6 @@ public class TestEntity implements SharedEntity, ProtectedEntity, ExpandableEnti
         this.entityField = entityField;
     }
 
-
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     public Set<ChildTestEntity> getChildren() {
         return children;
@@ -133,5 +132,28 @@ public class TestEntity implements SharedEntity, ProtectedEntity, ExpandableEnti
     @Override
     public void setExtension(EntityExtension entityExtension) {
         this.entityExtension = entityExtension;
+    }
+
+    private long[] categoryIds;
+    private long[] tagIds;
+
+    @Override
+    public long[] getCategoryIds() {
+        return categoryIds;
+    }
+
+    @Override
+    public void setCategoryIds(long[] categoryIds) {
+        this.categoryIds = categoryIds;
+    }
+
+    @Override
+    public long[] getTagIds() {
+        return tagIds;
+    }
+
+    @Override
+    public void setTagIds(long[] tagIds) {
+        this.tagIds = tagIds;
     }
 }

@@ -60,7 +60,23 @@ import it.water.repository.service.repository.NotOwnedEntityRepositoryImpl;
 import it.water.repository.service.repository.TestEntityRepositoryImpl;
 import lombok.Setter;
 
-@ExtendWith({MockitoExtension.class, WaterTestExtension.class})
+import it.water.core.api.entity.events.*;
+import it.water.core.api.model.events.ApplicationEventProducer;
+import it.water.core.api.permission.SecurityContext;
+import it.water.core.api.registry.ComponentRegistry;
+import it.water.core.api.repository.query.QueryBuilder;
+import it.water.core.api.repository.query.operands.FieldNameOperand;
+import it.water.core.api.service.BaseEntitySystemApi;
+import it.water.core.api.service.integration.AssetCategoryIntegrationClient;
+import it.water.core.api.service.integration.AssetTagIntegrationClient;
+import it.water.core.api.service.integration.SharedEntityIntegrationClient;
+import it.water.core.api.validation.WaterValidator;
+import it.water.core.model.exceptions.WaterRuntimeException;
+import static org.mockito.ArgumentMatchers.*;
+import java.util.Collections;
+import java.util.List;
+
+@ExtendWith({ MockitoExtension.class, WaterTestExtension.class })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WaterRepositoryServiceTest implements Service {
     private TestEntityRepositoryImpl workingRepo;
@@ -281,5 +297,208 @@ class WaterRepositoryServiceTest implements Service {
         t.setId(1);
         TestValidationEntitySystemApi api = TestRuntimeInitializer.getInstance().getComponentRegistry().findComponent(TestValidationEntitySystemApi.class, null);
         Assertions.assertThrows(ValidationException.class, () -> api.validate(t));
+    }
+
+    @Test
+    @Order(8)
+    void testAssetManagementSave() {
+        BaseEntitySystemServiceImpl<TestEntity> localService = createLocalSystemService();
+        ComponentRegistry componentRegistry = Mockito.mock(ComponentRegistry.class);
+        WaterValidator waterValidator = Mockito.mock(WaterValidator.class);
+        AssetCategoryIntegrationClient assetCategoryClient = Mockito.mock(AssetCategoryIntegrationClient.class);
+        AssetTagIntegrationClient assetTagClient = Mockito.mock(AssetTagIntegrationClient.class);
+
+        localService.setAssetCategoryIntegrationClient(assetCategoryClient);
+        localService.setAssetTagIntegrationClient(assetTagClient);
+        localService.setWaterValidator(waterValidator);
+        localService.setComponentRegistry(componentRegistry);
+
+        TestEntity entity = new TestEntity();
+        entity.setId(1L);
+        entity.setCategoryIds(new long[] { 1L, 2L });
+        entity.setTagIds(new long[] { 10L });
+
+        Mockito.doNothing().when(waterValidator).validate(any());
+
+        localService.save(entity);
+        Mockito.verify(assetCategoryClient, Mockito.times(1)).addAssetCategories(any(), eq(entity.getId()), any());
+        Mockito.verify(assetTagClient, Mockito.times(1)).addAssetTags(any(), eq(entity.getId()), any());
+    }
+
+    @Test
+    @Order(9)
+    void testAssetManagementUpdate() {
+        BaseEntitySystemServiceImpl<TestEntity> localService = createLocalSystemService();
+        ComponentRegistry componentRegistry = Mockito.mock(ComponentRegistry.class);
+        WaterValidator waterValidator = Mockito.mock(WaterValidator.class);
+        AssetCategoryIntegrationClient assetCategoryClient = Mockito.mock(AssetCategoryIntegrationClient.class);
+        AssetTagIntegrationClient assetTagClient = Mockito.mock(AssetTagIntegrationClient.class);
+
+        localService.setAssetCategoryIntegrationClient(assetCategoryClient);
+        localService.setAssetTagIntegrationClient(assetTagClient);
+        localService.setWaterValidator(waterValidator);
+        localService.setComponentRegistry(componentRegistry);
+
+        TestEntity entity = new TestEntity();
+        entity.setId(1L);
+        entity.setCategoryIds(new long[] { 1L });
+        entity.setTagIds(new long[] { 10L });
+
+        localService.update(entity);
+
+        Mockito.verify(assetCategoryClient, Mockito.times(1)).removeAssetCategories(any(), eq(entity.getId()), any());
+        Mockito.verify(assetCategoryClient, Mockito.times(1)).addAssetCategories(any(), eq(entity.getId()), any());
+        Mockito.verify(assetTagClient, Mockito.times(1)).removeAssetTags(any(), eq(entity.getId()), any());
+        Mockito.verify(assetTagClient, Mockito.times(1)).addAssetTags(any(), eq(entity.getId()), any());
+    }
+
+    @Test
+    @Order(10)
+    void testAssetManagementRemove() {
+        BaseEntitySystemServiceImpl<TestEntity> localService = createLocalSystemService();
+        ComponentRegistry componentRegistry = Mockito.mock(ComponentRegistry.class);
+        WaterValidator waterValidator = Mockito.mock(WaterValidator.class);
+        AssetCategoryIntegrationClient assetCategoryClient = Mockito.mock(AssetCategoryIntegrationClient.class);
+        AssetTagIntegrationClient assetTagClient = Mockito.mock(AssetTagIntegrationClient.class);
+
+        Mockito.when(assetCategoryClient.findAssetCategories(any(), anyLong())).thenReturn(new long[0]);
+        Mockito.when(assetTagClient.findAssetTags(any(), anyLong())).thenReturn(new long[0]);
+
+        localService.setAssetCategoryIntegrationClient(assetCategoryClient);
+        localService.setAssetTagIntegrationClient(assetTagClient);
+        localService.setWaterValidator(waterValidator);
+        localService.setComponentRegistry(componentRegistry);
+
+        localService.remove(1L);
+
+        Mockito.verify(assetCategoryClient, Mockito.times(1)).findAssetCategories(any(), anyLong());
+        Mockito.verify(assetCategoryClient, Mockito.times(1)).removeAssetCategories(any(), eq(1L), any());
+        Mockito.verify(assetTagClient, Mockito.times(1)).findAssetTags(any(), anyLong());
+    }
+
+    @Test
+    @Order(11)
+    void testEventsProductionIsolated() {
+        BaseEntitySystemServiceImpl<TestEntity> localService = createLocalSystemService();
+        ComponentRegistry componentRegistry = Mockito.mock(ComponentRegistry.class);
+        WaterValidator waterValidator = Mockito.mock(WaterValidator.class);
+        ApplicationEventProducer eventProducer = Mockito.mock(ApplicationEventProducer.class);
+
+        localService.setWaterValidator(waterValidator);
+        localService.setComponentRegistry(componentRegistry);
+
+        Mockito.when(componentRegistry.findComponent(eq(ApplicationEventProducer.class), any()))
+                .thenReturn(eventProducer);
+
+        TestEntity entity = new TestEntity();
+        entity.setId(1L);
+
+        localService.save(entity);
+        Mockito.verify(eventProducer).produceEvent(eq(entity), eq(PreSaveEvent.class));
+        Mockito.verify(eventProducer).produceEvent(eq(entity), eq(PostSaveEvent.class));
+
+        localService.update(entity);
+        Mockito.verify(eventProducer).produceEvent(eq(entity), eq(PreUpdateEvent.class));
+        Mockito.verify(eventProducer).produceDetailedEvent(any(), any(), eq(PreUpdateDetailedEvent.class));
+
+        localService.remove(1L);
+        Mockito.verify(eventProducer).produceEvent(any(), eq(PreRemoveEvent.class));
+    }
+
+    @Test
+    @Order(12)
+    void testExceptionsWrappedInWaterRuntimeException() {
+        TestEntityRepository brokenRepo = Mockito.mock(TestEntityRepository.class);
+        Mockito.lenient().when(brokenRepo.persist(any())).thenThrow(new RuntimeException("DB Error"));
+        Mockito.lenient().when(brokenRepo.update(any())).thenThrow(new RuntimeException("DB Error"));
+        Mockito.lenient().when(brokenRepo.find(anyLong())).thenReturn(new TestEntity());
+
+        BaseEntitySystemServiceImpl<TestEntity> brokenService = new BaseEntitySystemServiceImpl<TestEntity>(
+                TestEntity.class) {
+            @Override
+            protected TestEntityRepository getRepository() {
+                return brokenRepo;
+            }
+        };
+        ComponentRegistry componentRegistry = Mockito.mock(ComponentRegistry.class);
+        WaterValidator waterValidator = Mockito.mock(WaterValidator.class);
+        brokenService.setWaterValidator(waterValidator);
+        brokenService.setComponentRegistry(componentRegistry);
+
+        ApplicationEventProducer producer = Mockito.mock(ApplicationEventProducer.class);
+        Mockito.lenient().when(componentRegistry.findComponent(ApplicationEventProducer.class, null))
+                .thenReturn(producer);
+
+        TestEntity entity = new TestEntity();
+        Assertions.assertThrows(WaterRuntimeException.class, () -> brokenService.save(entity));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> brokenService.update(entity));
+    }
+
+    @Test
+    @Order(13)
+    void testServiceSecurityAndSharedEntities() {
+        BaseEntitySystemApi<TestEntity> sysApi = Mockito.mock(BaseEntitySystemApi.class);
+        QueryBuilder mockQb = Mockito.mock(QueryBuilder.class);
+        Mockito.when(sysApi.getQueryBuilderInstance()).thenReturn(mockQb);
+
+        ComponentRegistry componentRegistry = Mockito.mock(ComponentRegistry.class);
+
+        BaseEntityServiceImpl<TestEntity> protectedService = new BaseEntityServiceImpl<TestEntity>(TestEntity.class) {
+            @Override
+            protected BaseEntitySystemApi<TestEntity> getSystemService() {
+                return sysApi;
+            }
+
+            @Override
+            protected ComponentRegistry getComponentRegistry() {
+                return componentRegistry;
+            }
+        };
+
+        Runtime mockRuntime = Mockito.mock(Runtime.class);
+        SecurityContext mockSecurityContext = Mockito.mock(SecurityContext.class);
+        protectedService.setRuntime(mockRuntime);
+
+        Mockito.when(mockRuntime.getSecurityContext()).thenReturn(mockSecurityContext);
+        Mockito.when(mockSecurityContext.isAdmin()).thenReturn(false);
+        Mockito.when(mockSecurityContext.getLoggedEntityId()).thenReturn(123L);
+
+        FieldNameOperand mockOperand = Mockito.mock(FieldNameOperand.class);
+        Query mockQuery = Mockito.mock(Query.class);
+
+        Mockito.when(mockQb.field(anyString())).thenReturn(mockOperand);
+        Mockito.when(mockOperand.equalTo(any())).thenReturn(mockQuery);
+
+        SharedEntityIntegrationClient sharedClient = Mockito.mock(SharedEntityIntegrationClient.class);
+        Mockito.when(componentRegistry.findComponent(eq(SharedEntityIntegrationClient.class), any()))
+                .thenReturn(sharedClient);
+        Mockito.when(sharedClient.fetchSharingUsersIds(anyString(), anyLong())).thenReturn(List.of(999L));
+
+        Mockito.when(mockQb.createQueryFilter(anyString())).thenReturn(mockQuery);
+
+        protectedService.find((Query) null);
+
+        Mockito.verify(sharedClient).fetchSharingUsersIds(eq(TestEntity.class.getName()), eq(123L));
+
+        Mockito.when(mockSecurityContext.getLoggedEntityId()).thenReturn(0L);
+        Assertions.assertThrows(UnauthorizedException.class, () -> protectedService.find((Query) null));
+    }
+
+    private BaseEntitySystemServiceImpl<TestEntity> createLocalSystemService() {
+        TestEntityRepository mockRepo = Mockito.mock(TestEntityRepository.class);
+        Mockito.lenient().when(mockRepo.persist(any())).thenAnswer(i -> i.getArgument(0));
+        Mockito.lenient().when(mockRepo.update(any())).thenAnswer(i -> i.getArgument(0));
+        Mockito.lenient().when(mockRepo.find(anyLong())).thenAnswer(i -> {
+            TestEntity e = new TestEntity();
+            e.setId((Long) i.getArgument(0));
+            return e;
+        });
+
+        return new BaseEntitySystemServiceImpl<TestEntity>(TestEntity.class) {
+            @Override
+            protected TestEntityRepository getRepository() {
+                return mockRepo;
+            }
+        };
     }
 }

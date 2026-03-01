@@ -174,7 +174,6 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
         return this.getRepository().find(id);
     }
 
-
     /**
      * @param filter filter
      * @return
@@ -214,23 +213,24 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
      * @param op
      */
     private void manageAssetCategories(T entity, AssetOperation op) {
-        if (assetCategoryIntegrationClient == null) return;
+        if (assetCategoryIntegrationClient == null)
+            return;
 
         String resourceName = entity.getClass().getName();
         long resourceId = entity.getId();
-
+        long[] categoryIds = entity.getCategoryIds();
         switch (op) {
             case ADD:
-                if (entity.getCategoryIds() != null)
+                if (categoryIds != null && categoryIds.length > 0)
                     assetCategoryIntegrationClient.addAssetCategories(resourceName, resourceId,
-                            entity.getCategoryIds());
+                            categoryIds);
                 break;
             case UPDATE:
                 long[] oldIds = assetCategoryIntegrationClient.findAssetCategories(resourceName, resourceId);
                 assetCategoryIntegrationClient.removeAssetCategories(resourceName, resourceId, oldIds);
-                if (entity.getCategoryIds() != null)
+                if (categoryIds != null && categoryIds.length > 0)
                     assetCategoryIntegrationClient.addAssetCategories(resourceName, resourceId,
-                            entity.getCategoryIds());
+                            categoryIds);
                 break;
             case DELETE:
                 long[] ids = assetCategoryIntegrationClient.findAssetCategories(resourceName, resourceId);
@@ -240,27 +240,29 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
 
     /**
      * Manage asset tags for an entity
+     * 
      * @param entity the entity
-     * @param op the operation (ADD, UPDATE, DELETE)
+     * @param op     the operation (ADD, UPDATE, DELETE)
      */
     private void manageAssetTags(T entity, AssetOperation op) {
-        if (assetTagIntegrationClient == null) return;
+        if (assetTagIntegrationClient == null)
+            return;
 
         String resourceName = entity.getClass().getName();
         long resourceId = entity.getId();
-
+        long[] tagIds = entity.getTagIds();
         switch (op) {
             case ADD:
-                if (entity.getTagIds() != null)
+                if (tagIds != null && tagIds.length > 0)
                     assetTagIntegrationClient.addAssetTags(resourceName, resourceId,
-                            entity.getTagIds());
+                            tagIds);
                 break;
             case UPDATE:
                 long[] oldIds = assetTagIntegrationClient.findAssetTags(resourceName, resourceId);
                 assetTagIntegrationClient.removeAssetTags(resourceName, resourceId, oldIds);
-                if (entity.getTagIds() != null)
+                if (tagIds != null && tagIds.length > 0)
                     assetTagIntegrationClient.addAssetTags(resourceName, resourceId,
-                            entity.getTagIds());
+                            tagIds);
                 break;
             case DELETE:
                 long[] ids = assetTagIntegrationClient.findAssetTags(resourceName, resourceId);
@@ -275,7 +277,6 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
     public Class<T> getEntityType() {
         return this.type;
     }
-
 
     /**
      * @param filter filter
@@ -353,7 +354,6 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
      * Return the current repository
      */
     protected abstract BaseRepository<T> getRepository();
-
 
     protected enum AssetOperation {
         ADD, DELETE, UPDATE;
