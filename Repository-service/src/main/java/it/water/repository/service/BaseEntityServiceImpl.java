@@ -245,11 +245,20 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
             if (sharedEntityIntegrationClient != null) {
                 //forcing the condition that user must own the entity or is shared with him
                 Collection<Long> entityIds = sharedEntityIntegrationClient.fetchSharingUsersIds(type.getName(), loggedEntityId);
-                StringBuilder sb = new StringBuilder();
-                entityIds.stream().forEach(id -> sb.append(id + ","));
                 if (!entityIds.isEmpty()) {
-                    String entityIdsStr = sb.toString().substring(0, sb.toString().length() - 1);
-                    ownedResourceFilter = getSystemService().getQueryBuilderInstance().createQueryFilter(ownedResourceFilter.getDefinition() + " OR id IN (" + entityIdsStr + ")");
+                    // H7: parse only server-controlled numeric ids and combine via or(),
+                    // never re-serialize the existing filter (injection risk).
+                    // NOTE: field("id").in(list) is unusable here — In is capped at 2 operands
+                    // and the JPA PredicateBuilder expects a FieldValueListOperand.
+                    StringBuilder ids = new StringBuilder();
+                    for (Long sharedId : entityIds) {
+                        if (ids.length() > 0) {
+                            ids.append(",");
+                        }
+                        ids.append(sharedId.longValue());
+                    }
+                    Query sharedByIdsFilter = getSystemService().getQueryBuilderInstance().createQueryFilter("id IN (" + ids + ")");
+                    ownedResourceFilter = ownedResourceFilter.or(sharedByIdsFilter);
                 }
             }
         }
