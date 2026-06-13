@@ -43,7 +43,41 @@ import java.util.List;
 public class QueryParser {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(QueryParser.class.getName());
+
+    /**
+     * Generic, non-revealing parse error message. Internal token details are
+     * intentionally NOT exposed to the caller to avoid leaking parser internals.
+     */
+    private static final String PARSE_ERROR_MSG = "Invalid query filter";
+
+    /**
+     * Maximum allowed length of a raw filter string. Filters longer than this are
+     * rejected before tokenization as a defensive cap against CPU-DoS via oversized
+     * input. Documented constant: QueryParser is instantiated directly (not as a
+     * framework component) and has no access to ApplicationProperties, so an
+     * Options-based property would require an invasive refactor of DefaultQueryBuilder.
+     */
+    private static final int MAX_FILTER_LENGTH = 4096;
+
+    /**
+     * Absolute backstop on the number of tokenizer advancements. Guards against any
+     * residual non-advancing loop even if the per-iteration guard is bypassed.
+     */
+    private static final int MAX_ITERATIONS = 10000;
+
     private StreamTokenizer tokenizer;
+    /**
+     * Counts every tokenizer.nextToken() call. Used as an absolute backstop guard
+     * counter to break any residual infinite loop, and as a cheap "did the tokenizer
+     * advance?" heuristic for the parse() non-advancement detector.
+     */
+    private int tokenCount;
+    /**
+     * Running parenthesis-balance counter: incremented on '(', decremented on ')'.
+     * A negative value (a ')' without a matching '(') or a non-zero value at EOF is a
+     * parse error.
+     */
+    private int parenthesisDepth;
     private static List<QueryFilterOperation> availableOperations;
 
     static {
@@ -62,6 +96,11 @@ public class QueryParser {
     }
 
     public QueryParser(String filter) {
+        // Defensive length cap: reject oversized filters before tokenizing to bound
+        // CPU work and protect against DoS via huge input strings.
+        if (filter != null && filter.length() > MAX_FILTER_LENGTH) {
+            throw new IllegalArgumentException(PARSE_ERROR_MSG);
+        }
         this.tokenizer = new StreamTokenizer(new StringReader(filter));
         tokenizer.resetSyntax();
         tokenizer.wordChars('a', 'z');
@@ -81,11 +120,46 @@ public class QueryParser {
         tokenizer.slashStarComments(false);
     }
 
+    /**
+     * Single choke point for advancing the tokenizer. Centralizes the absolute
+     * backstop guard counter (MAX_ITERATIONS) and the parenthesis-balance tracking
+     * so they hold no matter which parsing method advances the stream.
+     */
+    private int advance() throws IOException {
+        if (++tokenCount > MAX_ITERATIONS) {
+            // Absolute backstop: too many token advancements => malformed/abusive input.
+            throw new IllegalArgumentException(PARSE_ERROR_MSG);
+        }
+        int type = tokenizer.nextToken();
+        if (type == '(') {
+            parenthesisDepth++;
+        } else if (type == ')') {
+            parenthesisDepth--;
+            if (parenthesisDepth < 0) {
+                // ')' without a matching '(' => unbalanced parentheses.
+                throw new IllegalArgumentException(PARSE_ERROR_MSG);
+            }
+        }
+        return type;
+    }
+
     public Query parse() throws InstantiationException, IllegalAccessException, IOException, InvocationTargetException, NoSuchMethodException {
         Query result = null;
-        tokenizer.nextToken();
+        advance();
         while (tokenizer.ttype != StreamTokenizer.TT_EOF) {
+            // Snapshot tokenizer state before the call. If parseExpression returns
+            // without consuming a token (same advancement count, still not EOF),
+            // we would otherwise spin forever (e.g. an unbalanced trailing ')').
+            int countBefore = tokenCount;
             result = this.parseExpression(result);
+            if (tokenizer.ttype != StreamTokenizer.TT_EOF && tokenCount == countBefore) {
+                // No progress on a non-EOF token => unparseable / offending token left behind.
+                throw new IllegalArgumentException(PARSE_ERROR_MSG);
+            }
+        }
+        // At end of input every '(' must have been matched by a ')'.
+        if (parenthesisDepth != 0) {
+            throw new IllegalArgumentException(PARSE_ERROR_MSG);
         }
         return result;
     }
@@ -107,23 +181,30 @@ public class QueryParser {
         } else if (tokenizer.ttype == StreamTokenizer.TT_NUMBER) {
             result = new FieldValueOperand(String.valueOf(tokenizer.nval));
         } else if (tokenizer.ttype != -4 /* TT_NOTHING */) {
-            throw new IllegalArgumentException("Unrecognized token: " + tokenizer.ttype + "/" + tokenizer.sval);
+            throw new IllegalArgumentException(PARSE_ERROR_MSG);
         }
-        tokenizer.nextToken();
+        advance();
         return result;
     }
 
     private Query parseParenthesisNode(boolean parseField) throws IOException, InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
         Query innerFilter = null;
-        tokenizer.nextToken();
+        advance();
         while (tokenizer.ttype != ')' && tokenizer.ttype != StreamTokenizer.TT_EOF) {
+            // Guard against a non-advancing inner loop (e.g. an offending token that
+            // neither matches a value/expression nor terminates the parenthesis).
+            int countBefore = tokenCount;
             if(!parseField)
                 innerFilter = parseValueList();
             else
                 innerFilter = parseExpression(innerFilter);
+            if (tokenizer.ttype != ')' && tokenizer.ttype != StreamTokenizer.TT_EOF && tokenCount == countBefore) {
+                throw new IllegalArgumentException(PARSE_ERROR_MSG);
+            }
         }
         if (tokenizer.ttype != ')') {
-            throw new IllegalAccessException(") expected, got " + tokenizer.ttype + "/" + tokenizer.sval);
+            // Unclosed '(' (reached EOF before ')').
+            throw new IllegalArgumentException(PARSE_ERROR_MSG);
         }
         Query parenthesisNode = new ParenthesisNode();
         parenthesisNode.defineOperands(innerFilter);
@@ -136,7 +217,7 @@ public class QueryParser {
         while (tokenizer.ttype != ')' && tokenizer.ttype != StreamTokenizer.TT_EOF) {
             // Skip comma separator
             if (tokenizer.ttype == ',') {
-                tokenizer.nextToken();
+                advance();
                 continue;
             }
 
@@ -154,7 +235,7 @@ public class QueryParser {
                 values.add(value);
             }
 
-            tokenizer.nextToken();
+            advance();
         }
 
         return new FieldValueListOperand(values);
@@ -169,10 +250,18 @@ public class QueryParser {
             return parseOperation(left, tokenizer.sval);
         } else if (tokenizer.ttype != StreamTokenizer.TT_NUMBER && tokenizer.ttype != StreamTokenizer.TT_EOF && tokenizer.ttype != ')') {
             StringBuilder sb = new StringBuilder();
-            while (tokenizer.ttype != StreamTokenizer.TT_WORD && tokenizer.ttype != StreamTokenizer.TT_NUMBER && tokenizer.ttype != '"' && tokenizer.ttype != '\'') {
+            // Accumulate a symbolic operator (e.g. '=', '>=', '<'). Must test TT_EOF
+            // so that an operator with no right-hand operand (e.g. "name=") does NOT
+            // spin forever calling nextToken() past end of input.
+            while (tokenizer.ttype != StreamTokenizer.TT_WORD && tokenizer.ttype != StreamTokenizer.TT_NUMBER
+                    && tokenizer.ttype != '"' && tokenizer.ttype != '\'' && tokenizer.ttype != StreamTokenizer.TT_EOF) {
                 char ch = (char) tokenizer.ttype;
                 sb.append(ch);
-                tokenizer.nextToken();
+                advance();
+            }
+            if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
+                // Reached EOF while expecting the operator's right-hand operand => invalid.
+                throw new IllegalArgumentException(PARSE_ERROR_MSG);
             }
             return parseOperation(left, sb.toString());
         }
@@ -185,7 +274,7 @@ public class QueryParser {
                 QueryFilterOperation operation = availableOperations.get(i).getClass().getConstructor().newInstance();
                 Query nr = (Query) operation;
                 if (operation.needsExpr()) {
-                    tokenizer.nextToken();
+                    advance();
                     nr.defineOperands(firstOperand, parseExpression(null));
                 } else {
                     Query[] operands = new Query[operation.numOperands()];
@@ -195,19 +284,19 @@ public class QueryParser {
                 return nr;
             }
         }
-        throw new IllegalArgumentException("Impossibile to parse data...");
+        throw new IllegalArgumentException(PARSE_ERROR_MSG);
     }
 
     private void parseOperands(Query[] operands, Query firstOperand, QueryFilterOperation operation) throws IOException, InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
         operands[0] = firstOperand;
         //if is unary, then go ahead
         if (operation.numOperands() == 1) {
-            tokenizer.nextToken();
+            advance();
         } else {
             for (int j = 1; j < operation.numOperands(); j++) {
                 //go ahead if the current operator is a string not symbol
                 if (tokenizer.ttype == StreamTokenizer.TT_WORD && tokenizer.sval.equalsIgnoreCase(operation.operator()))
-                    tokenizer.nextToken();
+                    advance();
                 operands[j] = parsePrimary(false);
             }
         }
@@ -219,7 +308,7 @@ public class QueryParser {
                 QueryFilterOperation operation = availableOperations.get(i);
                 if (operation instanceof QueryFilterOperator) {
                     Query nr = (Query) operation;
-                    tokenizer.nextToken();
+                    advance();
                     nr.defineOperands(parseExpression(null));
                     return nr;
                 }
