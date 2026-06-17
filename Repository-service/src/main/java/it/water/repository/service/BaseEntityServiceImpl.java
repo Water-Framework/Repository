@@ -105,6 +105,21 @@ public abstract class BaseEntityServiceImpl<T extends BaseEntity> extends BaseAb
     public T update(T entity) {
         this.log.debug("Service Updating entity entity {}: {} ", this.type.getSimpleName(), entity);
         if (entity.getId() > 0) {
+            // #38: on the generic update path the client must never be able to change the owner of an
+            // OwnedResource (give it away or null it). Always restore ownerUserId from the currently
+            // persisted entity before delegating to the system service. This is intentionally applied
+            // to admins too: the generic update is not the place to transfer ownership (a dedicated
+            // operation should be used for that). Note this only fixes the persisted field value; the
+            // H5 ownership/permission interceptor independently reloads the entity for authorization.
+            if (entity instanceof OwnedResource ownedResource) {
+                // Restore the owner from the persisted entity when it exists; if it does not exist we
+                // leave the entity unchanged and let the system-service update surface the error,
+                // preserving the prior not-found behaviour of update().
+                BaseEntity persisted = this.getSystemService().find(entity.getId());
+                if (persisted instanceof OwnedResource persistedOwned) {
+                    ownedResource.setOwnerUserId(persistedOwned.getOwnerUserId());
+                }
+            }
             return this.getSystemService().update(entity);
         }
         throw new EntityNotFound();
