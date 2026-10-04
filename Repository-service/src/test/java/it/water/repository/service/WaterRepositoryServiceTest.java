@@ -397,12 +397,17 @@ class WaterRepositoryServiceTest implements Service {
         Mockito.verify(eventProducer).produceEvent(entity, PreSaveEvent.class);
         Mockito.verify(eventProducer).produceEvent(entity, PostSaveEvent.class);
 
+        // update must be symmetric with save/remove: plain + detailed on BOTH sides. The plain
+        // PostUpdateEvent used to be missing, so a listener subscribed to it never fired.
         localService.update(entity);
         Mockito.verify(eventProducer).produceEvent(entity, PreUpdateEvent.class);
         Mockito.verify(eventProducer).produceDetailedEvent(any(), any(), eq(PreUpdateDetailedEvent.class));
+        Mockito.verify(eventProducer).produceEvent(entity, PostUpdateEvent.class);
+        Mockito.verify(eventProducer).produceDetailedEvent(any(), any(), eq(PostUpdateDetailedEvent.class));
 
         localService.remove(1L);
         Mockito.verify(eventProducer).produceEvent(any(), eq(PreRemoveEvent.class));
+        Mockito.verify(eventProducer).produceEvent(any(), eq(PostRemoveEvent.class));
     }
 
     @Test

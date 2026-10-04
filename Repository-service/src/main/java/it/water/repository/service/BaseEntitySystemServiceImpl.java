@@ -49,6 +49,18 @@ import org.slf4j.LoggerFactory;
  * This interface defines the methods for basic CRUD operations. This
  * methods are reusable by all entities in order to interact with the
  * persistence layer.
+ * <p>
+ * <b>This is the single emission point of the CRUD domain events.</b> They are produced here and
+ * not in the repository on purpose: {@code BaseRepository} is a port with several adapters (JPA
+ * Spring, JPA OSGi, test), so emitting from an adapter would mean re-implementing - and eventually
+ * diverging - once per adapter, and would couple the storage port to the event bus.
+ * <p>
+ * Two limits of this choice are worth knowing. First, the transaction boundary lives on the
+ * repository, so the events sit OUTSIDE it: {@code Pre*} is emitted before any transaction exists
+ * and {@code Post*} after the commit (a {@code Pre*} listener therefore cannot veto the write).
+ * Second, this layer is not a complete choke point: the bulk operations of
+ * {@code BaseRepository} ({@code removeAllByIds}, {@code removeAll}, ...) are not exposed here and
+ * a caller reaching the repository directly produces no event at all.
  */
 public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
         extends BaseAbstractSystemService implements BaseEntitySystemApi<T> {
@@ -131,6 +143,8 @@ public abstract class BaseEntitySystemServiceImpl<T extends BaseEntity>
             //updates the entity and process, eventually the expandable entity
             T updatedEntity = this.getRepository().update(entity);
             manageAssets(entity, AssetOperation.UPDATE);
+            //same Pre* ordering: the plain event first, the detailed one right after
+            produceEvent(updatedEntity, PostUpdateEvent.class);
             produceDetailedEvent(entityBeforeUpdate, updatedEntity, PostUpdateDetailedEvent.class);
             return updatedEntity;
         } catch (DuplicateEntityException e) {
